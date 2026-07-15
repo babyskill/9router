@@ -291,6 +291,60 @@ async function createBypassRequest(parsedUrl, realIP, options) {
   });
 }
 
+async function createSocksRequest(parsedUrl, proxyUrl, options) {
+  const httpModule = await import("http");
+  const httpsModule = await import("https");
+  const { SocksProxyAgent } = await import("socks-proxy-agent");
+
+  const http = httpModule.default ?? httpModule;
+  const https = httpsModule.default ?? httpsModule;
+
+  const agent = new SocksProxyAgent(proxyUrl);
+  const isHttps = parsedUrl.protocol === "https:";
+  const client = isHttps ? https : http;
+
+  const reqOptions = {
+    agent,
+    hostname: parsedUrl.hostname,
+    port: parsedUrl.port || (isHttps ? 443 : 80),
+    path: parsedUrl.pathname + parsedUrl.search,
+    method: (options.method || "GET").toUpperCase(),
+    headers: options.headers || {},
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = client.request(reqOptions, (res) => {
+      const resHeaders = new Headers();
+      for (const [k, v] of Object.entries(res.headers || {})) {
+        if (Array.isArray(v)) v.forEach((x) => resHeaders.append(k, String(x)));
+        else if (v != null) resHeaders.set(k, String(v));
+      }
+
+      const body = Readable.toWeb(res);
+      const response = {
+        ok: res.statusCode >= 200 && res.statusCode < 300,
+        status: res.statusCode,
+        statusText: res.statusMessage || "",
+        headers: resHeaders,
+        body,
+        text: async () => {
+          const chunks = [];
+          for await (const chunk of res) chunks.push(chunk);
+          return Buffer.concat(chunks).toString();
+        },
+        json: async () => JSON.parse(await response.text()),
+      };
+      resolve(response);
+    });
+
+    req.on("error", reject);
+    if (options.body) {
+      req.write(typeof options.body === "string" ? options.body : JSON.stringify(options.body));
+    }
+    req.end();
+  });
+}
+
 export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
   const targetUrl = typeof url === "string" ? url : url.toString();
 
@@ -309,6 +363,20 @@ export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
   const connectionProxyUrl = resolveConnectionProxyUrl(targetUrl, proxyOptions);
   const envProxyUrl = connectionProxyUrl ? null : normalizeProxyUrl(getEnvProxyUrl(targetUrl));
   const proxyUrl = connectionProxyUrl || envProxyUrl;
+
+  const isSocks = proxyUrl && /^socks[45]/i.test(proxyUrl);
+  if (isSocks) {
+    try {
+      const parsedUrl = new URL(targetUrl);
+      return await createSocksRequest(parsedUrl, proxyUrl, options);
+    } catch (proxyError) {
+      if (proxyOptions?.strictProxy === true) {
+        throw new Error(`[ProxyFetch] SOCKS Proxy required but failed: ${proxyError.message}`);
+      }
+      console.warn(`[ProxyFetch] SOCKS Proxy failed, falling back to direct: ${proxyError.message}`);
+      return originalFetch(url, options);
+    }
+  }
 
   // MITM DNS bypass: for known MITM-intercepted hosts, resolve real IP to avoid DNS spoof
   if (shouldBypassMitmDns(targetUrl)) {

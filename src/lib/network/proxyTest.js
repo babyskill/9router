@@ -38,6 +38,61 @@ export async function testProxyUrl({ proxyUrl, testUrl, timeoutMs } = {}) {
       ? Math.min(timeoutMsRaw, 30000)
       : DEFAULT_TIMEOUT_MS;
 
+  const isSocks = normalizedProxyUrl && /^socks[45]/i.test(normalizedProxyUrl);
+  if (isSocks) {
+    try {
+      const parsedTestUrl = new URL(normalizedTestUrl);
+      const { SocksProxyAgent } = await import("socks-proxy-agent");
+      const agent = new SocksProxyAgent(normalizedProxyUrl);
+
+      const httpModule = await import("http");
+      const httpsModule = await import("https");
+      const http = httpModule.default ?? httpModule;
+      const https = httpsModule.default ?? httpsModule;
+
+      const isHttps = parsedTestUrl.protocol === "https:";
+      const client = isHttps ? https : http;
+
+      const controller = new AbortController();
+      const startedAt = Date.now();
+      const timer = setTimeout(() => controller.abort(), normalizedTimeoutMs);
+
+      const reqOptions = {
+        agent,
+        hostname: parsedTestUrl.hostname,
+        port: parsedTestUrl.port || (isHttps ? 443 : 80),
+        path: parsedTestUrl.pathname + parsedTestUrl.search,
+        method: "HEAD",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "9Router",
+        }
+      };
+
+      return new Promise((resolve) => {
+        const req = client.request(reqOptions, (res) => {
+          clearTimeout(timer);
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            statusText: res.statusMessage,
+            url: normalizedTestUrl,
+            elapsedMs: Date.now() - startedAt,
+          });
+        });
+
+        req.on("error", (err) => {
+          clearTimeout(timer);
+          const message = err?.name === "AbortError" ? "Proxy test timed out" : getErrorMessage(err);
+          resolve({ ok: false, status: 500, error: message });
+        });
+        req.end();
+      });
+    } catch (err) {
+      return { ok: false, status: 400, error: `Invalid SOCKS proxy: ${err.message}` };
+    }
+  }
+
   let dispatcher;
 
   try {

@@ -1,0 +1,169 @@
+{
+  "updatedAt": "2026-07-16T01:53:21.043Z",
+  "sources": [
+    {
+      "key": "AGENTS",
+      "path": "/Users/trungkientn/Dev/NodeJS/9router/AGENTS.md",
+      "mtimeMs": null
+    },
+    {
+      "key": "CONSTITUTION",
+      "path": "/Users/trungkientn/Dev/NodeJS/9router/docs/CONSTITUTION.md",
+      "mtimeMs": null
+    }
+  ],
+  "payload": {
+    "files": [
+      "/Users/trungkientn/Dev/NodeJS/9router/AGENTS.md",
+      "/Users/trungkientn/Dev/NodeJS/9router/docs/CONSTITUTION.md"
+    ],
+    "bullets": [
+      {
+        "from": "AGENTS",
+        "text": "(Add project-specific rules here)"
+      },
+      {
+        "from": "AGENTS",
+        "text": "`.project-identity`"
+      },
+      {
+        "from": "AGENTS",
+        "text": "`CODEBASE.md`"
+      },
+      {
+        "from": "AGENTS",
+        "text": "**MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: \"symbolName\", direction: \"upstream\"})` and report the blast radius (direct callers, affected processes, risk level) to the user."
+      },
+      {
+        "from": "AGENTS",
+        "text": "**MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: \"compare\", base_ref: \"master\"})`."
+      },
+      {
+        "from": "AGENTS",
+        "text": "**MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits."
+      },
+      {
+        "from": "AGENTS",
+        "text": "When exploring unfamiliar code, use `query({search_query: \"concept\"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance."
+      },
+      {
+        "from": "AGENTS",
+        "text": "When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: \"symbolName\"})`."
+      },
+      {
+        "from": "AGENTS",
+        "text": "For security review, `explain({target: \"fileOrSymbol\"})` lists taint findings (source→sink flows; needs `analyze --pdg`)."
+      },
+      {
+        "from": "AGENTS",
+        "text": "NEVER edit a function, class, or method without first running `impact` on it."
+      },
+      {
+        "from": "AGENTS",
+        "text": "NEVER ignore HIGH or CRITICAL risk warnings from impact analysis."
+      },
+      {
+        "from": "AGENTS",
+        "text": "NEVER rename symbols with find-and-replace — use `rename` which understands the call graph."
+      },
+      {
+        "from": "AGENTS",
+        "text": "NEVER commit changes without running `detect_changes()` to check affected scope."
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Rule:** [Mệnh lệnh rõ ràng — VD: \"Mọi logic nghiệp vụ phải có unit test trước khi merge.\"]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Rationale:** [Tại sao nguyên tắc này tồn tại — vấn đề nó ngăn chặn.]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Non-negotiable because:** [Hậu quả nếu vi phạm.]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Rule:** [...]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Rationale:** [...]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Non-negotiable because:** [...]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Rule:** [...]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Rationale:** [...]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Non-negotiable because:** [...]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Testing:** [VD: Test-first cho mọi logic nghiệp vụ.]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Review:** [VD: Mọi PR qua code-review gate trước khi merge.]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**Commit / Versioning:** [VD: Conventional commits; SemVer.]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**File size:** [VD: File < 500 lines.]"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "Hiến pháp này **thắng** mọi convention khác. Xung đột → hiến pháp đúng."
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "Sửa đổi cần: (1) lý do rõ ràng, (2) user approve, (3) tăng version + ghi vào lịch sử bên dưới."
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**SemVer cho hiến pháp:**"
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**MAJOR** — gỡ/định nghĩa lại một nguyên tắc (breaking cho code đang chạy)."
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**MINOR** — thêm nguyên tắc/ràng buộc mới."
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "**PATCH** — làm rõ câu chữ, không đổi ý nghĩa."
+      },
+      {
+        "from": "CONSTITUTION",
+        "text": "Trong lúc code, nếu buộc phải vi phạm một nguyên tắc → ⛔ DỪNG, quay lại đây sửa hiến pháp (có approve) TRƯỚC, rồi mới code."
+      }
+    ],
+    "cacheUsed": false,
+    "sourceFiles": {
+      "AGENTS": {
+        "path": "/Users/trungkientn/Dev/NodeJS/9router/AGENTS.md",
+        "mtimeMs": null,
+        "bulletCount": 13
+      },
+      "CONSTITUTION": {
+        "path": "/Users/trungkientn/Dev/NodeJS/9router/docs/CONSTITUTION.md",
+        "mtimeMs": null,
+        "bulletCount": 20
+      }
+    },
+    "updatedAt": "2026-07-16T01:53:21.043Z"
+  }
+}

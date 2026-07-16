@@ -9,6 +9,10 @@ function rowToKey(row) {
     name: row.name,
     machineId: row.machineId,
     isActive: row.isActive === 1 || row.isActive === true,
+    quotaLimitUsd: row.quotaLimitUsd == null ? null : Number(row.quotaLimitUsd),
+    quotaUsageUsd: Number(row.quotaUsageUsd ?? 0),
+    quotaLimitTokens: row.quotaLimitTokens == null ? null : Number(row.quotaLimitTokens),
+    quotaUsageTokens: Number(row.quotaUsageTokens ?? 0),
     createdAt: row.createdAt,
   };
 }
@@ -25,7 +29,7 @@ export async function getApiKeyById(id) {
   return rowToKey(row);
 }
 
-export async function createApiKey(name, machineId) {
+export async function createApiKey(name, machineId, quotaLimitUsd = null, quotaLimitTokens = null) {
   if (!machineId) throw new Error("machineId is required");
   const db = await getAdapter();
   const { generateApiKeyWithMachine } = await import("@/shared/utils/apiKey");
@@ -36,11 +40,19 @@ export async function createApiKey(name, machineId) {
     key: result.key,
     machineId,
     isActive: true,
+    quotaLimitUsd,
+    quotaUsageUsd: 0,
+    quotaLimitTokens,
+    quotaUsageTokens: 0,
     createdAt: new Date().toISOString(),
   };
   db.run(
-    `INSERT INTO apiKeys(id, key, name, machineId, isActive, createdAt) VALUES(?, ?, ?, ?, ?, ?)`,
-    [apiKey.id, apiKey.key, apiKey.name, apiKey.machineId, 1, apiKey.createdAt]
+    `INSERT INTO apiKeys(id, key, name, machineId, isActive, quotaLimitUsd, quotaUsageUsd, quotaLimitTokens, quotaUsageTokens, createdAt) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      apiKey.id, apiKey.key, apiKey.name, apiKey.machineId, 1,
+      apiKey.quotaLimitUsd, apiKey.quotaUsageUsd,
+      apiKey.quotaLimitTokens, apiKey.quotaUsageTokens, apiKey.createdAt,
+    ]
   );
   return apiKey;
 }
@@ -53,8 +65,12 @@ export async function updateApiKey(id, data) {
     if (!row) return;
     const merged = { ...rowToKey(row), ...data };
     db.run(
-      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ? WHERE id = ?`,
-      [merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0, id]
+      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, quotaLimitUsd = ?, quotaUsageUsd = ?, quotaLimitTokens = ?, quotaUsageTokens = ? WHERE id = ?`,
+      [
+        merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0,
+        merged.quotaLimitUsd, merged.quotaUsageUsd,
+        merged.quotaLimitTokens, merged.quotaUsageTokens, id,
+      ]
     );
     result = merged;
   });
@@ -68,8 +84,35 @@ export async function deleteApiKey(id) {
 }
 
 export async function validateApiKey(key) {
+  const result = await validateApiKeyDetails(key);
+  return result.valid;
+}
+
+export async function validateApiKeyDetails(key) {
   const db = await getAdapter();
-  const row = db.get(`SELECT isActive FROM apiKeys WHERE key = ?`, [key]);
-  if (!row) return false;
-  return row.isActive === 1 || row.isActive === true;
+  const row = db.get(`SELECT * FROM apiKeys WHERE key = ?`, [key]);
+  const apiKey = rowToKey(row);
+
+  if (!apiKey) return { valid: false, error: "Invalid API key", status: 401 };
+  if (!apiKey.isActive) {
+    return { valid: false, error: "API key is paused/inactive", status: 401 };
+  }
+  if (apiKey.quotaLimitUsd !== null && apiKey.quotaUsageUsd >= apiKey.quotaLimitUsd) {
+    return {
+      valid: false,
+      error: "API key quota exceeded (USD budget limit reached)",
+      status: 402,
+    };
+  }
+  if (
+    apiKey.quotaLimitTokens !== null &&
+    apiKey.quotaUsageTokens >= apiKey.quotaLimitTokens
+  ) {
+    return {
+      valid: false,
+      error: "API key quota exceeded (Token limit reached)",
+      status: 429,
+    };
+  }
+  return { valid: true };
 }

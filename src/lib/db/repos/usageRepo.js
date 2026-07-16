@@ -288,6 +288,13 @@ export async function saveRequestUsage(entry) {
         ]
       );
 
+      if (typeof entry.apiKey === "string") {
+        db.run(
+          `UPDATE apiKeys SET quotaUsageUsd = quotaUsageUsd + ?, quotaUsageTokens = quotaUsageTokens + ? WHERE key = ?`,
+          [entry.cost || 0, promptTokens + completionTokens, entry.apiKey]
+        );
+      }
+
       const dateKey = getLocalDateKey(entry.timestamp);
       const row = db.get(`SELECT data FROM usageDaily WHERE dateKey = ?`, [dateKey]);
       const day = row ? parseJson(row.data, {}) : {

@@ -22,7 +22,13 @@ export default function APIPageClient({ machineId }) {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyQuotaLimitUsd, setNewKeyQuotaLimitUsd] = useState("");
+  const [newKeyQuotaLimitTokens, setNewKeyQuotaLimitTokens] = useState("");
   const [createdKey, setCreatedKey] = useState(null);
+  const [editingKey, setEditingKey] = useState(null);
+  const [editingKeyName, setEditingKeyName] = useState("");
+  const [editingKeyQuotaLimitUsd, setEditingKeyQuotaLimitUsd] = useState("");
+  const [editingKeyQuotaLimitTokens, setEditingKeyQuotaLimitTokens] = useState("");
   const [confirmState, setConfirmState] = useState(null);
 
   const [requireApiKey, setRequireApiKey] = useState(false);
@@ -614,7 +620,12 @@ export default function APIPageClient({ machineId }) {
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName }),
+        body: JSON.stringify({
+          name: newKeyName,
+          quotaLimitUsd: newKeyQuotaLimitUsd === "" ? null : parseFloat(newKeyQuotaLimitUsd),
+          quotaLimitTokens:
+            newKeyQuotaLimitTokens === "" ? null : parseInt(newKeyQuotaLimitTokens, 10),
+        }),
       });
       const data = await res.json();
 
@@ -622,6 +633,8 @@ export default function APIPageClient({ machineId }) {
         setCreatedKey(data.key);
         await fetchData();
         setNewKeyName("");
+        setNewKeyQuotaLimitUsd("");
+        setNewKeyQuotaLimitTokens("");
         setShowAddModal(false);
       }
     } catch (error) {
@@ -664,6 +677,64 @@ export default function APIPageClient({ machineId }) {
       }
     } catch (error) {
       console.log("Error toggling key:", error);
+    }
+  };
+
+  const closeEditKeyModal = () => {
+    setEditingKey(null);
+    setEditingKeyName("");
+    setEditingKeyQuotaLimitUsd("");
+    setEditingKeyQuotaLimitTokens("");
+  };
+
+  const handleUpdateKey = async () => {
+    if (!editingKey || !editingKeyName.trim()) return;
+
+    try {
+      const res = await fetch(`/api/keys/${editingKey.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editingKeyName,
+          quotaLimitUsd:
+            editingKeyQuotaLimitUsd === "" ? null : parseFloat(editingKeyQuotaLimitUsd),
+          quotaLimitTokens:
+            editingKeyQuotaLimitTokens === ""
+              ? null
+              : parseInt(editingKeyQuotaLimitTokens, 10),
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setKeys((prev) => prev.map((key) => (key.id === editingKey.id ? data.key : key)));
+        closeEditKeyModal();
+      }
+    } catch (error) {
+      console.log("Error updating key:", error);
+    }
+  };
+
+  const handleResetKeyUsage = async () => {
+    if (!editingKey) return;
+
+    try {
+      const res = await fetch(`/api/keys/${editingKey.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resetUsage: true }),
+      });
+
+      if (res.ok) {
+        setKeys((prev) => prev.map((key) => (
+          key.id === editingKey.id
+            ? { ...key, quotaUsageUsd: 0, quotaUsageTokens: 0 }
+            : key
+        )));
+        closeEditKeyModal();
+      }
+    } catch (error) {
+      console.log("Error resetting key usage:", error);
     }
   };
 
@@ -1021,9 +1092,19 @@ export default function APIPageClient({ machineId }) {
                       </span>
                     </button>
                   </div>
-                  <p className="text-xs text-text-muted mt-1">
-                    Created {new Date(key.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="text-xs text-text-muted mt-1 space-y-0.5">
+                    <p>Created {new Date(key.createdAt).toLocaleDateString()}</p>
+                    <p>
+                      Usage: ${(key.quotaUsageUsd || 0).toFixed(4)} / {key.quotaLimitUsd !== null
+                        ? `$${key.quotaLimitUsd}`
+                        : "Unlimited"}
+                    </p>
+                    <p>
+                      Tokens: {(key.quotaUsageTokens || 0).toLocaleString()} / {key.quotaLimitTokens !== null
+                        ? key.quotaLimitTokens.toLocaleString()
+                        : "Unlimited"}
+                    </p>
+                  </div>
                   {key.isActive === false && (
                     <p className="text-xs text-orange-500 mt-1">Paused</p>
                   )}
@@ -1049,6 +1130,22 @@ export default function APIPageClient({ machineId }) {
                     title={key.isActive ? "Pause key" : "Resume key"}
                   />
                   <button
+                    onClick={() => {
+                      setEditingKey(key);
+                      setEditingKeyName(key.name);
+                      setEditingKeyQuotaLimitUsd(
+                        key.quotaLimitUsd !== null ? String(key.quotaLimitUsd) : ""
+                      );
+                      setEditingKeyQuotaLimitTokens(
+                        key.quotaLimitTokens !== null ? String(key.quotaLimitTokens) : ""
+                      );
+                    }}
+                    className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-all"
+                    title="Edit key"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button
                     onClick={() => handleDeleteKey(key.id)}
                     className="p-2 hover:bg-red-500/10 rounded text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                   >
@@ -1068,6 +1165,8 @@ export default function APIPageClient({ machineId }) {
         onClose={() => {
           setShowAddModal(false);
           setNewKeyName("");
+          setNewKeyQuotaLimitUsd("");
+          setNewKeyQuotaLimitTokens("");
         }}
       >
         <div className="flex flex-col gap-4">
@@ -1077,6 +1176,20 @@ export default function APIPageClient({ machineId }) {
             onChange={(e) => setNewKeyName(e.target.value)}
             placeholder="Production Key"
           />
+          <Input
+            label="USD Budget Limit (e.g. 5.00)"
+            type="number"
+            value={newKeyQuotaLimitUsd}
+            onChange={(e) => setNewKeyQuotaLimitUsd(e.target.value)}
+            placeholder="Optional"
+          />
+          <Input
+            label="Token Limit (e.g. 1000000)"
+            type="number"
+            value={newKeyQuotaLimitTokens}
+            onChange={(e) => setNewKeyQuotaLimitTokens(e.target.value)}
+            placeholder="Optional"
+          />
           <div className="flex gap-2">
             <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim()}>
               Create
@@ -1085,6 +1198,8 @@ export default function APIPageClient({ machineId }) {
               onClick={() => {
                 setShowAddModal(false);
                 setNewKeyName("");
+                setNewKeyQuotaLimitUsd("");
+                setNewKeyQuotaLimitTokens("");
               }}
               variant="ghost"
               fullWidth
@@ -1127,6 +1242,46 @@ export default function APIPageClient({ machineId }) {
           <Button onClick={() => setCreatedKey(null)} fullWidth>
             Done
           </Button>
+        </div>
+      </Modal>
+
+      {/* Edit Key Modal */}
+      <Modal
+        isOpen={!!editingKey}
+        title="Edit API Key"
+        onClose={closeEditKeyModal}
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Name"
+            value={editingKeyName}
+            onChange={(e) => setEditingKeyName(e.target.value)}
+          />
+          <Input
+            label="USD Budget Limit (e.g. 5.00)"
+            type="number"
+            value={editingKeyQuotaLimitUsd}
+            onChange={(e) => setEditingKeyQuotaLimitUsd(e.target.value)}
+            placeholder="Unlimited"
+          />
+          <Input
+            label="Token Limit (e.g. 1000000)"
+            type="number"
+            value={editingKeyQuotaLimitTokens}
+            onChange={(e) => setEditingKeyQuotaLimitTokens(e.target.value)}
+            placeholder="Unlimited"
+          />
+          <div className="flex gap-2">
+            <Button onClick={handleUpdateKey} fullWidth disabled={!editingKeyName.trim()}>
+              Save
+            </Button>
+            <Button onClick={handleResetKeyUsage} variant="secondary" fullWidth>
+              Reset Usage
+            </Button>
+            <Button onClick={closeEditKeyModal} variant="ghost" fullWidth>
+              Cancel
+            </Button>
+          </div>
         </div>
       </Modal>
 

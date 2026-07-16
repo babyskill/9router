@@ -5,7 +5,7 @@ import {
   markAccountUnavailable,
   clearAccountError,
   extractApiKey,
-  isValidApiKey,
+  isValidApiKeyDetails,
 } from "../services/auth.js";
 import { cacheClaudeHeaders } from "open-sse/utils/claudeHeaderCache.js";
 import { getSettings } from "@/lib/localDb";
@@ -69,10 +69,10 @@ export async function handleChat(request, clientRawRequest = null) {
       log.warn("AUTH", "Missing API key (requireApiKey=true)");
       return errorResponse(HTTP_STATUS.UNAUTHORIZED, "Missing API key");
     }
-    const valid = await isValidApiKey(apiKey);
-    if (!valid) {
-      log.warn("AUTH", "Invalid API key (requireApiKey=true)");
-      return errorResponse(HTTP_STATUS.UNAUTHORIZED, "Invalid API key");
+    const check = await isValidApiKeyDetails(apiKey);
+    if (!check.valid) {
+      log.warn("AUTH", `${check.error} (requireApiKey=true)`);
+      return errorResponse(check.status || HTTP_STATUS.UNAUTHORIZED, check.error);
     }
   }
 

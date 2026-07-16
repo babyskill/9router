@@ -6,9 +6,9 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const pkg = searchParams.get("package"); // "core" hoặc "skills"
 
-  if (pkg !== "core" && pkg !== "skills") {
+  if (pkg !== "core" && pkg !== "skills" && pkg !== "workflows") {
     return NextResponse.json(
-      { error: "Invalid package parameter. Use 'core' or 'skills'" },
+      { error: "Invalid package parameter. Use 'core', 'skills', or 'workflows'" },
       { status: 400 }
     );
   }

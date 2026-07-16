@@ -78,3 +78,7 @@ open-sse.old/
 .graphifyignore
 graphify-out/*
 .next-analyze/*
+log.txt
+tmp/
+.gitnexus/
+node_modules/

@@ -1,4 +1,4 @@
-# Claude Code Instructions: 9router
+# AI Agent Constitution: 9router
 > **NOTICE:** This project uses Antigravity (AWKit) as the central orchestrator.
 > Global rules are automatically loaded by your agent runner. This file is for project-scoped rules.
 

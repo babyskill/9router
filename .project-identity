@@ -1,0 +1,113 @@
+{
+  "_comments": {
+    "projectId": "Auto-generated. DO NOT change — used by Symphony for task scoping.",
+    "trello": "Fill in your Trello board/list/card names. Run \"awkit trello info\" to verify."
+  },
+  "projectName": "9router",
+  "projectId": "9router",
+  "projectType": "web-nextjs",
+  "primaryLanguage": "en",
+  "techStack": {
+    "platform": "Web",
+    "language": "TypeScript / JavaScript",
+    "framework": "Next.js",
+    "styling": "Tailwind CSS / CSS Modules",
+    "stateManagement": "Zustand / Redux Toolkit / React Context",
+    "networking": "Axios / Fetch"
+  },
+  "services": {
+    "firebase": {
+      "enabled": true,
+      "features": [
+        "analytics",
+        "crashlytics",
+        "remote-config",
+        "auth"
+      ]
+    }
+  },
+  "constitution": {
+    "gate": "G0",
+    "required": true,
+    "path": "docs/CONSTITUTION.md",
+    "status": "present",
+    "fallbackPaths": [
+      "docs/CONSTITUTION.md",
+      "docs/specs/CONSTITUTION.md",
+      ".specify/memory/constitution.md",
+      "AGENTS.md"
+    ],
+    "template": "templates/specs/constitution-template.md",
+    "description": "Project constitution (immutable principles). Gate 0 — every spec/task MUST comply. AI agents: read this file before any MODERATE/COMPLEX work."
+  },
+  "trello": {
+    "board": "Your Board Name",
+    "list": "Your List Name",
+    "card": "Your Card Name"
+  },
+  "automation": {
+    "autoQA": true,
+    "maxSelfCorrectionLoops": 3,
+    "multiAgent": {
+      "enabled": true,
+      "routingMode": "cost-optimized",
+      "audioAlerts": true,
+      "runners": {}
+    },
+    "telegram": {
+      "enabled": true,
+      "chatId": "",
+      "topicId": "",
+      "triggers": {
+        "git_push": true,
+        "task_complete": false,
+        "deploy": true
+      }
+    },
+    "trello": {
+      "enabled": true,
+      "autoSync": true,
+      "triggers": {
+        "task_complete": true,
+        "milestone": true,
+        "blocked": true
+      }
+    },
+    "git": {
+      "autoCommit": true,
+      "autoPush": true
+    },
+    "obsidian": {
+      "enabled": false,
+      "path": "",
+      "autoSync": false
+    },
+    "mcp": {
+      "pixel-mcp": {
+        "enabled": false
+      }
+    },
+    "build": {
+      "enabled": false,
+      "command": "npm run build"
+    }
+  },
+  "modelPolicy": {
+    "mode": "auto",
+    "defaultTier": "STANDARD",
+    "tierOverrides": {
+      "*.plist|*.json|*.env": "LIGHT",
+      "docs/*": "LIGHT"
+    }
+  },
+  "projectStage": "development",
+  "codingStandards": {
+    "language": "en",
+    "namingConvention": "camelCase",
+    "indentation": "spaces-2",
+    "lineLength": 100
+  },
+  "projectGoals": [],
+  "createdDate": "2026-07-16",
+  "lastUpdated": "2026-07-16"
+}

@@ -24,11 +24,15 @@ export default function APIPageClient({ machineId }) {
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyQuotaLimitUsd, setNewKeyQuotaLimitUsd] = useState("");
   const [newKeyQuotaLimitTokens, setNewKeyQuotaLimitTokens] = useState("");
+  const [newKeyAllow9Router, setNewKeyAllow9Router] = useState(true);
+  const [newKeyAllowSkills, setNewKeyAllowSkills] = useState(true);
   const [createdKey, setCreatedKey] = useState(null);
   const [editingKey, setEditingKey] = useState(null);
   const [editingKeyName, setEditingKeyName] = useState("");
   const [editingKeyQuotaLimitUsd, setEditingKeyQuotaLimitUsd] = useState("");
   const [editingKeyQuotaLimitTokens, setEditingKeyQuotaLimitTokens] = useState("");
+  const [editingKeyAllow9Router, setEditingKeyAllow9Router] = useState(true);
+  const [editingKeyAllowSkills, setEditingKeyAllowSkills] = useState(true);
   const [confirmState, setConfirmState] = useState(null);
 
   const [requireApiKey, setRequireApiKey] = useState(false);
@@ -625,6 +629,8 @@ export default function APIPageClient({ machineId }) {
           quotaLimitUsd: newKeyQuotaLimitUsd === "" ? null : parseFloat(newKeyQuotaLimitUsd),
           quotaLimitTokens:
             newKeyQuotaLimitTokens === "" ? null : parseInt(newKeyQuotaLimitTokens, 10),
+          allow9Router: newKeyAllow9Router,
+          allowSkills: newKeyAllowSkills,
         }),
       });
       const data = await res.json();
@@ -635,6 +641,8 @@ export default function APIPageClient({ machineId }) {
         setNewKeyName("");
         setNewKeyQuotaLimitUsd("");
         setNewKeyQuotaLimitTokens("");
+        setNewKeyAllow9Router(true);
+        setNewKeyAllowSkills(true);
         setShowAddModal(false);
       }
     } catch (error) {
@@ -685,6 +693,8 @@ export default function APIPageClient({ machineId }) {
     setEditingKeyName("");
     setEditingKeyQuotaLimitUsd("");
     setEditingKeyQuotaLimitTokens("");
+    setEditingKeyAllow9Router(true);
+    setEditingKeyAllowSkills(true);
   };
 
   const handleUpdateKey = async () => {
@@ -702,6 +712,8 @@ export default function APIPageClient({ machineId }) {
             editingKeyQuotaLimitTokens === ""
               ? null
               : parseInt(editingKeyQuotaLimitTokens, 10),
+          allow9Router: editingKeyAllow9Router,
+          allowSkills: editingKeyAllowSkills,
         }),
       });
       const data = await res.json();
@@ -1094,6 +1106,18 @@ export default function APIPageClient({ machineId }) {
                   </div>
                   <div className="text-xs text-text-muted mt-1 space-y-0.5">
                     <p>Created {new Date(key.createdAt).toLocaleDateString()}</p>
+                    <div className="flex flex-wrap gap-1 py-0.5">
+                      {key.allow9Router && (
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                          [9router]
+                        </span>
+                      )}
+                      {key.allowSkills && (
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                          [Skills]
+                        </span>
+                      )}
+                    </div>
                     <p>
                       Usage: ${(key.quotaUsageUsd || 0).toFixed(4)} / {key.quotaLimitUsd !== null
                         ? `$${key.quotaLimitUsd}`
@@ -1139,6 +1163,8 @@ export default function APIPageClient({ machineId }) {
                       setEditingKeyQuotaLimitTokens(
                         key.quotaLimitTokens !== null ? String(key.quotaLimitTokens) : ""
                       );
+                      setEditingKeyAllow9Router(key.allow9Router ?? true);
+                      setEditingKeyAllowSkills(key.allowSkills ?? true);
                     }}
                     className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-all"
                     title="Edit key"
@@ -1167,6 +1193,8 @@ export default function APIPageClient({ machineId }) {
           setNewKeyName("");
           setNewKeyQuotaLimitUsd("");
           setNewKeyQuotaLimitTokens("");
+          setNewKeyAllow9Router(true);
+          setNewKeyAllowSkills(true);
         }}
       >
         <div className="flex flex-col gap-4">
@@ -1190,6 +1218,16 @@ export default function APIPageClient({ machineId }) {
             onChange={(e) => setNewKeyQuotaLimitTokens(e.target.value)}
             placeholder="Optional"
           />
+          <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span>Allow 9router proxy access</span>
+              <Toggle checked={newKeyAllow9Router} onChange={setNewKeyAllow9Router} />
+            </label>
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span>Allow Skill/AWKit downloads</span>
+              <Toggle checked={newKeyAllowSkills} onChange={setNewKeyAllowSkills} />
+            </label>
+          </div>
           <div className="flex gap-2">
             <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim()}>
               Create
@@ -1200,6 +1238,8 @@ export default function APIPageClient({ machineId }) {
                 setNewKeyName("");
                 setNewKeyQuotaLimitUsd("");
                 setNewKeyQuotaLimitTokens("");
+                setNewKeyAllow9Router(true);
+                setNewKeyAllowSkills(true);
               }}
               variant="ghost"
               fullWidth
@@ -1271,6 +1311,16 @@ export default function APIPageClient({ machineId }) {
             onChange={(e) => setEditingKeyQuotaLimitTokens(e.target.value)}
             placeholder="Unlimited"
           />
+          <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span>Allow 9router proxy access</span>
+              <Toggle checked={editingKeyAllow9Router} onChange={setEditingKeyAllow9Router} />
+            </label>
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span>Allow Skill/AWKit downloads</span>
+              <Toggle checked={editingKeyAllowSkills} onChange={setEditingKeyAllowSkills} />
+            </label>
+          </div>
           <div className="flex gap-2">
             <Button onClick={handleUpdateKey} fullWidth disabled={!editingKeyName.trim()}>
               Save

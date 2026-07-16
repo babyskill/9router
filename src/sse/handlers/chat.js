@@ -69,7 +69,7 @@ export async function handleChat(request, clientRawRequest = null) {
       log.warn("AUTH", "Missing API key (requireApiKey=true)");
       return errorResponse(HTTP_STATUS.UNAUTHORIZED, "Missing API key");
     }
-    const check = await isValidApiKeyDetails(apiKey);
+    const check = await isValidApiKeyDetails(apiKey, "9router");
     if (!check.valid) {
       log.warn("AUTH", `${check.error} (requireApiKey=true)`);
       return errorResponse(check.status || HTTP_STATUS.UNAUTHORIZED, check.error);

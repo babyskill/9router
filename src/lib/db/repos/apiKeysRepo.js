@@ -9,6 +9,14 @@ function rowToKey(row) {
     name: row.name,
     machineId: row.machineId,
     isActive: row.isActive === 1 || row.isActive === true,
+    allow9Router:
+      row.allow9Router === undefined
+        ? true
+        : row.allow9Router === 1 || row.allow9Router === true,
+    allowSkills:
+      row.allowSkills === undefined
+        ? true
+        : row.allowSkills === 1 || row.allowSkills === true,
     quotaLimitUsd: row.quotaLimitUsd == null ? null : Number(row.quotaLimitUsd),
     quotaUsageUsd: Number(row.quotaUsageUsd ?? 0),
     quotaLimitTokens: row.quotaLimitTokens == null ? null : Number(row.quotaLimitTokens),
@@ -29,7 +37,14 @@ export async function getApiKeyById(id) {
   return rowToKey(row);
 }
 
-export async function createApiKey(name, machineId, quotaLimitUsd = null, quotaLimitTokens = null) {
+export async function createApiKey(
+  name,
+  machineId,
+  quotaLimitUsd = null,
+  quotaLimitTokens = null,
+  allow9Router = true,
+  allowSkills = true
+) {
   if (!machineId) throw new Error("machineId is required");
   const db = await getAdapter();
   const { generateApiKeyWithMachine } = await import("@/shared/utils/apiKey");
@@ -40,6 +55,8 @@ export async function createApiKey(name, machineId, quotaLimitUsd = null, quotaL
     key: result.key,
     machineId,
     isActive: true,
+    allow9Router,
+    allowSkills,
     quotaLimitUsd,
     quotaUsageUsd: 0,
     quotaLimitTokens,
@@ -47,9 +64,10 @@ export async function createApiKey(name, machineId, quotaLimitUsd = null, quotaL
     createdAt: new Date().toISOString(),
   };
   db.run(
-    `INSERT INTO apiKeys(id, key, name, machineId, isActive, quotaLimitUsd, quotaUsageUsd, quotaLimitTokens, quotaUsageTokens, createdAt) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO apiKeys(id, key, name, machineId, isActive, allow9Router, allowSkills, quotaLimitUsd, quotaUsageUsd, quotaLimitTokens, quotaUsageTokens, createdAt) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       apiKey.id, apiKey.key, apiKey.name, apiKey.machineId, 1,
+      apiKey.allow9Router ? 1 : 0, apiKey.allowSkills ? 1 : 0,
       apiKey.quotaLimitUsd, apiKey.quotaUsageUsd,
       apiKey.quotaLimitTokens, apiKey.quotaUsageTokens, apiKey.createdAt,
     ]
@@ -65,9 +83,10 @@ export async function updateApiKey(id, data) {
     if (!row) return;
     const merged = { ...rowToKey(row), ...data };
     db.run(
-      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, quotaLimitUsd = ?, quotaUsageUsd = ?, quotaLimitTokens = ?, quotaUsageTokens = ? WHERE id = ?`,
+      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, allow9Router = ?, allowSkills = ?, quotaLimitUsd = ?, quotaUsageUsd = ?, quotaLimitTokens = ?, quotaUsageTokens = ? WHERE id = ?`,
       [
         merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0,
+        merged.allow9Router ? 1 : 0, merged.allowSkills ? 1 : 0,
         merged.quotaLimitUsd, merged.quotaUsageUsd,
         merged.quotaLimitTokens, merged.quotaUsageTokens, id,
       ]
@@ -88,7 +107,7 @@ export async function validateApiKey(key) {
   return result.valid;
 }
 
-export async function validateApiKeyDetails(key) {
+export async function validateApiKeyDetails(key, resource = "9router") {
   const db = await getAdapter();
   const row = db.get(`SELECT * FROM apiKeys WHERE key = ?`, [key]);
   const apiKey = rowToKey(row);
@@ -96,6 +115,20 @@ export async function validateApiKeyDetails(key) {
   if (!apiKey) return { valid: false, error: "Invalid API key", status: 401 };
   if (!apiKey.isActive) {
     return { valid: false, error: "API key is paused/inactive", status: 401 };
+  }
+  if (resource === "9router" && !apiKey.allow9Router) {
+    return {
+      valid: false,
+      error: "API key lacks 9router proxy access capability",
+      status: 403,
+    };
+  }
+  if (resource === "skills" && !apiKey.allowSkills) {
+    return {
+      valid: false,
+      error: "API key lacks skill download capability",
+      status: 403,
+    };
   }
   if (apiKey.quotaLimitUsd !== null && apiKey.quotaUsageUsd >= apiKey.quotaLimitUsd) {
     return {

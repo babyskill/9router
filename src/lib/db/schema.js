@@ -82,6 +82,8 @@ export const TABLES = {
       name: "TEXT",
       machineId: "TEXT",
       isActive: "INTEGER DEFAULT 1",
+      allow9Router: "INTEGER DEFAULT 1",
+      allowSkills: "INTEGER DEFAULT 1",
       quotaLimitUsd: "REAL DEFAULT NULL",
       quotaUsageUsd: "REAL DEFAULT 0",
       quotaLimitTokens: "INTEGER DEFAULT NULL",

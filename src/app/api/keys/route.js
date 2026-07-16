@@ -19,7 +19,13 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, quotaLimitUsd = null, quotaLimitTokens = null } = body;
+    const {
+      name,
+      quotaLimitUsd = null,
+      quotaLimitTokens = null,
+      allow9Router = true,
+      allowSkills = true,
+    } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -27,7 +33,14 @@ export async function POST(request) {
 
     // Always get machineId from server
     const machineId = await getConsistentMachineId();
-    const apiKey = await createApiKey(name, machineId, quotaLimitUsd, quotaLimitTokens);
+    const apiKey = await createApiKey(
+      name,
+      machineId,
+      quotaLimitUsd,
+      quotaLimitTokens,
+      allow9Router,
+      allowSkills
+    );
 
     return NextResponse.json({
       key: apiKey.key,
@@ -36,6 +49,8 @@ export async function POST(request) {
       machineId: apiKey.machineId,
       quotaLimitUsd: apiKey.quotaLimitUsd,
       quotaLimitTokens: apiKey.quotaLimitTokens,
+      allow9Router: apiKey.allow9Router,
+      allowSkills: apiKey.allowSkills,
     }, { status: 201 });
   } catch (error) {
     console.log("Error creating key:", error);

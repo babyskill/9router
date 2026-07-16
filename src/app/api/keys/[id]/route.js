@@ -24,6 +24,8 @@ export async function PUT(request, { params }) {
     const {
       isActive,
       name,
+      allow9Router,
+      allowSkills,
       quotaLimitUsd,
       quotaLimitTokens,
       quotaUsageUsd,
@@ -39,6 +41,8 @@ export async function PUT(request, { params }) {
     const updateData = {};
     if (isActive !== undefined) updateData.isActive = isActive;
     if (name !== undefined) updateData.name = name;
+    if (allow9Router !== undefined) updateData.allow9Router = allow9Router;
+    if (allowSkills !== undefined) updateData.allowSkills = allowSkills;
     if (quotaLimitUsd !== undefined) updateData.quotaLimitUsd = quotaLimitUsd;
     if (quotaLimitTokens !== undefined) updateData.quotaLimitTokens = quotaLimitTokens;
     if (quotaUsageUsd !== undefined) updateData.quotaUsageUsd = quotaUsageUsd;

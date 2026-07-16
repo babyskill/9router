@@ -325,6 +325,6 @@ export async function isValidApiKey(apiKey) {
   return await validateApiKey(apiKey);
 }
 
-export async function isValidApiKeyDetails(apiKey) {
-  return await validateApiKeyDetails(apiKey);
+export async function isValidApiKeyDetails(apiKey, resource = "9router") {
+  return await validateApiKeyDetails(apiKey, resource);
 }

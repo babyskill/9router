@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSettings, validateApiKey } from "@/lib/localDb";
+import { getSettings, validateApiKeyDetails } from "@/lib/localDb";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
 import { verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
 
@@ -127,16 +127,18 @@ function extractApiKey(request) {
   return request.nextUrl.searchParams?.get("key") || null;
 }
 
-async function hasValidApiKey(request) {
+async function hasValidApiKey(request, pathname) {
   const apiKey = extractApiKey(request);
   if (!apiKey) return false;
-  return await validateApiKey(apiKey);
+  const resource = pathname.startsWith("/api/v1/awkit") ? "skills" : "9router";
+  const check = await validateApiKeyDetails(apiKey, resource);
+  return check.valid;
 }
 
 async function canAccessPublicLlmApi(request) {
   if (isLocalRequest(request)) return true;
   if (await hasValidCliToken(request)) return true;
-  return await hasValidApiKey(request);
+  return await hasValidApiKey(request, request.nextUrl.pathname);
 }
 
 async function canAccessLocalOnlyRoute(request) {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Button, Card } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import {
+  SKILLS,
   SKILLS_REPO_URL,
   getSkillRawUrl,
 } from "@/shared/constants/skills";
@@ -94,6 +95,17 @@ export default function SkillsPage() {
   const [packageStatuses, setPackageStatuses] = useState(DEFAULT_PACKAGE_STATUSES);
   const [uploadingPackages, setUploadingPackages] = useState({});
   const [uploadErrors, setUploadErrors] = useState({});
+  const [selectedSkills, setSelectedSkills] = useState(() => SKILLS.map((s) => s.id));
+
+  const toggleSkill = (skillId) => {
+    setSelectedSkills((current) =>
+      current.includes(skillId)
+        ? current.filter((id) => id !== skillId)
+        : [...current, skillId]
+    );
+  };
+
+  const customBundleUrl = `/api/v1/awkit/download?package=custom&skills=${encodeURIComponent(selectedSkills.join(","))}`;
 
   const fetchPackageStatuses = useCallback(async () => {
     try {
@@ -247,6 +259,83 @@ export default function SkillsPage() {
         {uploadErrors.status && (
           <p className="text-sm font-medium text-red-600 dark:text-red-400">{uploadErrors.status}</p>
         )}
+      </section>
+
+      <section className="space-y-5">
+        <SectionHeading
+          eyebrow="Builder"
+          title="Custom Skills Bundle"
+          description="Select specific capabilities to build and download a customized ZIP package bundle."
+        />
+        <Card padding="md">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant={selectedSkills.length > 0 ? "success" : "default"} size="sm">
+                {selectedSkills.length} of {SKILLS.length} selected
+              </Badge>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedSkills(SKILLS.map((s) => s.id))}
+              >
+                Select All
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedSkills([])}
+              >
+                Clear All
+              </Button>
+            </div>
+            {selectedSkills.length === 0 ? (
+              <Button type="button" variant="secondary" size="sm" icon="download" disabled>
+                Download Selected Skills
+              </Button>
+            ) : (
+              <a
+                href={customBundleUrl}
+                download
+                className="inline-flex h-7 items-center justify-center gap-1.5 rounded-[8px] border border-border px-3 text-xs font-semibold text-text-main transition-all duration-150 hover:border-brand-500/40 hover:bg-surface-2 active:scale-[0.97]"
+              >
+                <span className="material-symbols-outlined text-[16px]">download</span>
+                Download Selected Skills
+              </a>
+            )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4">
+            {SKILLS.map((skill) => {
+              const isSelected = selectedSkills.includes(skill.id);
+
+              return (
+                <label
+                  key={skill.id}
+                  className={`flex cursor-pointer items-start gap-3 rounded-[12px] border p-3 transition-all duration-150 ${
+                    isSelected
+                      ? "border-brand-500/40 bg-brand-500/5"
+                      : "border-border hover:border-brand-500/25 hover:bg-surface-2"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSkill(skill.id)}
+                    className="mt-1 size-4 shrink-0 accent-primary"
+                  />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-primary">
+                    <span className="material-symbols-outlined text-[19px]">{skill.icon}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-text-main">{skill.name}</p>
+                    <p className="mt-0.5 text-xs leading-5 text-text-muted">{skill.description}</p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </Card>
       </section>
 
       <Card padding="md" className="flex flex-wrap items-center justify-between gap-4">

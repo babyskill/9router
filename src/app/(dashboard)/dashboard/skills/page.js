@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Button, Card } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
-import {
-  SKILLS,
-  SKILLS_REPO_URL,
-  getSkillRawUrl,
-} from "@/shared/constants/skills";
+import { SKILLS_REPO_URL, getSkillRawUrl } from "@/shared/constants/skills";
 
 const DEFAULT_PACKAGE_STATUSES = {
   core: { exists: false },
@@ -92,10 +88,17 @@ export default function SkillsPage() {
   const entryUrl = getSkillRawUrl("9router");
   const entryPrompt = `Read this skill and use it: ${entryUrl}`;
   const fileInputRefs = useRef({});
+  const customSkillInputRef = useRef(null);
+  const hasInitializedSkills = useRef(false);
   const [packageStatuses, setPackageStatuses] = useState(DEFAULT_PACKAGE_STATUSES);
   const [uploadingPackages, setUploadingPackages] = useState({});
   const [uploadErrors, setUploadErrors] = useState({});
-  const [selectedSkills, setSelectedSkills] = useState(() => SKILLS.map((s) => s.id));
+  const [skills, setSkills] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
+  const [uploadingCustomSkill, setUploadingCustomSkill] = useState(false);
+  const [deletingSkillId, setDeletingSkillId] = useState(null);
+  const [customSkillError, setCustomSkillError] = useState(null);
+  const [selectedSkills, setSelectedSkills] = useState([]);
 
   const toggleSkill = (skillId) => {
     setSelectedSkills((current) =>
@@ -106,6 +109,34 @@ export default function SkillsPage() {
   };
 
   const customBundleUrl = `/api/v1/awkit/download?package=custom&skills=${encodeURIComponent(selectedSkills.join(","))}`;
+
+  const fetchSkills = useCallback(async () => {
+    setLoadingSkills(true);
+
+    try {
+      const response = await fetch("/api/awkit/custom-skills", { cache: "no-store" });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Unable to load skills");
+
+      setSkills(data);
+      setSelectedSkills((current) => {
+        const availableIds = new Set(data.map((skill) => skill.id));
+
+        if (!hasInitializedSkills.current && current.length === 0) {
+          hasInitializedSkills.current = true;
+          return data.map((skill) => skill.id);
+        }
+
+        return current.filter((id) => availableIds.has(id));
+      });
+      setCustomSkillError(null);
+    } catch (error) {
+      setCustomSkillError(error.message);
+    } finally {
+      setLoadingSkills(false);
+    }
+  }, []);
 
   const fetchPackageStatuses = useCallback(async () => {
     try {
@@ -124,7 +155,65 @@ export default function SkillsPage() {
 
   useEffect(() => {
     fetchPackageStatuses();
-  }, [fetchPackageStatuses]);
+    fetchSkills();
+  }, [fetchPackageStatuses, fetchSkills]);
+
+  const handleCustomSkillUpload = async (file) => {
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith(".zip")) {
+      setCustomSkillError("Select a ZIP file.");
+      return;
+    }
+
+    setUploadingCustomSkill(true);
+    setCustomSkillError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/awkit/custom-skills", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Upload failed");
+
+      setSelectedSkills((current) =>
+        current.includes(data.id) ? current : [...current, data.id]
+      );
+      await fetchSkills();
+    } catch (error) {
+      setCustomSkillError(error.message);
+    } finally {
+      setUploadingCustomSkill(false);
+      if (customSkillInputRef.current) customSkillInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteSkill = async (skillId) => {
+    setDeletingSkillId(skillId);
+    setCustomSkillError(null);
+
+    try {
+      const response = await fetch(
+        `/api/awkit/custom-skills?id=${encodeURIComponent(skillId)}`,
+        { method: "DELETE" }
+      );
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Delete failed");
+
+      setSelectedSkills((current) => current.filter((id) => id !== skillId));
+      await fetchSkills();
+    } catch (error) {
+      setCustomSkillError(error.message);
+    } finally {
+      setDeletingSkillId(null);
+    }
+  };
 
   const handlePackageUpload = async (packageId, file) => {
     if (!file) return;
@@ -263,21 +352,60 @@ export default function SkillsPage() {
 
       <section className="space-y-5">
         <SectionHeading
-          eyebrow="Builder"
-          title="Custom Skills Bundle"
-          description="Select specific capabilities to build and download a customized ZIP package bundle."
+          eyebrow="Library"
+          title="Custom Skills Manager"
+          description="Upload individual skill archives, manage your library, and select exactly what goes into a custom bundle."
         />
         <Card padding="md">
+          <input
+            ref={customSkillInputRef}
+            type="file"
+            accept=".zip,application/zip"
+            className="hidden"
+            onChange={(event) => handleCustomSkillUpload(event.target.files?.[0])}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[12px] border border-dashed border-brand-500/30 bg-brand-500/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-primary/10 text-primary">
+                <span className="material-symbols-outlined text-[21px]">upload_file</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-text-main">Add a custom skill</p>
+                <p className="mt-0.5 text-xs text-text-muted">
+                  Upload a ZIP archive containing the skill files and SKILL.md metadata.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              icon="upload"
+              loading={uploadingCustomSkill}
+              disabled={uploadingCustomSkill}
+              onClick={() => customSkillInputRef.current?.click()}
+            >
+              Upload Skill ZIP
+            </Button>
+          </div>
+
+          {customSkillError && (
+            <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">
+              {customSkillError}
+            </p>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={selectedSkills.length > 0 ? "success" : "default"} size="sm">
-                {selectedSkills.length} of {SKILLS.length} selected
+                {selectedSkills.length} of {skills.length} selected
               </Badge>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedSkills(SKILLS.map((s) => s.id))}
+                disabled={loadingSkills || skills.length === 0}
+                onClick={() => setSelectedSkills(skills.map((skill) => skill.id))}
               >
                 Select All
               </Button>
@@ -306,13 +434,22 @@ export default function SkillsPage() {
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-            {SKILLS.map((skill) => {
+            {loadingSkills && skills.length === 0 ? (
+              <div className="col-span-full flex items-center justify-center gap-2 py-8 text-sm text-text-muted">
+                <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                Loading skills...
+              </div>
+            ) : skills.length === 0 ? (
+              <p className="col-span-full py-8 text-center text-sm text-text-muted">
+                No skills are available yet.
+              </p>
+            ) : skills.map((skill) => {
               const isSelected = selectedSkills.includes(skill.id);
 
               return (
-                <label
+                <div
                   key={skill.id}
-                  className={`flex cursor-pointer items-start gap-3 rounded-[12px] border p-3 transition-all duration-150 ${
+                  className={`flex items-start gap-3 rounded-[12px] border p-3 transition-all duration-150 ${
                     isSelected
                       ? "border-brand-500/40 bg-brand-500/5"
                       : "border-border hover:border-brand-500/25 hover:bg-surface-2"
@@ -327,11 +464,28 @@ export default function SkillsPage() {
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-primary">
                     <span className="material-symbols-outlined text-[19px]">{skill.icon}</span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-text-main">{skill.name}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-text-main">{skill.name}</p>
+                      {!skill.isBuiltIn && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          icon="delete"
+                          loading={deletingSkillId === skill.id}
+                          disabled={deletingSkillId === skill.id}
+                          onClick={() => handleDeleteSkill(skill.id)}
+                          title={`Delete ${skill.name}`}
+                        />
+                      )}
+                    </div>
                     <p className="mt-0.5 text-xs leading-5 text-text-muted">{skill.description}</p>
+                    <Badge variant={skill.isBuiltIn ? "primary" : "default"} size="sm" className="mt-2">
+                      {skill.isBuiltIn ? "Built-in" : "Custom"}
+                    </Badge>
                   </div>
-                </label>
+                </div>
               );
             })}
           </div>

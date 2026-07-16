@@ -67,7 +67,18 @@ function SkillRow({ skill }) {
         </a>
       </div>
 
-      <CopyButton value={url} />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 self-center">
+        <a
+          href={`/api/v1/awkit/download?package=${skill.id}`}
+          download
+          className="px-2 py-1 rounded-md border border-border-subtle hover:bg-surface-2 text-text-muted hover:text-text-main text-[11px] font-medium transition-colors cursor-pointer inline-flex items-center justify-center gap-1"
+          title={`Download ZIP of ${skill.name}`}
+        >
+          <span className="material-symbols-outlined text-[12px]">download</span>
+          Download ZIP
+        </a>
+        <CopyButton value={url} />
+      </div>
     </div>
   );
 }

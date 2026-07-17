@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
+import { DATA_DIR } from "@/lib/dataDir";
 
 const VALID_PACKAGES = ["core", "skills", "workflows"];
 
@@ -24,7 +25,7 @@ export async function POST(request) {
       );
     }
 
-    const storageDirectory = path.join(process.cwd(), "storage", "awkit");
+    const storageDirectory = path.join(DATA_DIR, "storage", "awkit");
     const filePath = path.join(storageDirectory, `${packageName}.zip`);
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 

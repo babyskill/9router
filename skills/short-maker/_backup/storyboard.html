@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storyboard Preview</title>
+  <style>
+    :root {
+      --bg: #121212; --card-bg: #1E1E1E; --text: #E0E0E0; --accent: #BB86FC; --accent-hover: #9965f4;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg); color: var(--text); padding: 20px;
+    }
+    header { text-align: center; margin-bottom: 30px; }
+    h1 { margin: 0; color: var(--accent); }
+    .meta { color: #888; font-size: 0.9em; margin-top: 5px; }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;
+    }
+    .card {
+      background: var(--card-bg); border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #333;
+    }
+    .card-img-wrapper { position: relative; padding-top: 56.25%; /* 16:9 Aspect Ratio */ background: #000; }
+    .card img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    .scene-number {
+      position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7);
+      color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8em;
+    }
+    .card-content { padding: 15px; }
+    .duration { color: var(--accent); font-weight: bold; font-size: 0.9em; margin-bottom: 8px; }
+    .script { font-size: 1em; line-height: 1.4; margin-bottom: 12px; }
+    .prompt { font-size: 0.8em; color: #888; font-style: italic; background: #2a2a2a; padding: 8px; border-radius: 6px; }
+    .timeline-bar {
+      height: 6px; background: #333; margin-top: 30px; border-radius: 3px; position: relative; overflow: hidden;
+    }
+    .timeline-progress { height: 100%; background: var(--accent); width: 0%; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 id="title">Loading Storyboard...</h1>
+    <div class="meta" id="meta">Duration: 0s</div>
+  </header>
+  
+  <div class="timeline-bar">
+    <div class="timeline-progress" id="timeline"></div>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- Cards will be injected here -->
+  </div>
+
+  <script>
+    async function loadStoryboard() {
+      try {
+        // Fetch expects storyboard.json in the same directory
+        const response = await fetch('storyboard.json');
+        const data = await response.json();
+        
+        document.getElementById('title').textContent = data.title || 'App Promo Storyboard';
+        document.getElementById('meta').textContent = `Total Duration: ${data.duration || 0}s | Video Target: ${data.target_format || '16:9'}`;
+        
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        
+        let totalTime = data.duration || 1; // avoid /0
+        let cumulative = 0;
+        
+        data.scenes.forEach((scene, index) => {
+          cumulative += scene.duration;
+          
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="card-img-wrapper">
+              <img src="${scene.image || 'https://via.placeholder.com/640x360?text=Generating+Image...'}" alt="Scene ${scene.id}">
+              <div class="scene-number">Scene ${scene.id}</div>
+            </div>
+            <div class="card-content">
+              <div class="duration">⏱️ ${scene.duration}s</div>
+              <div class="script">🎙️ "${scene.script}"</div>
+              <div class="prompt">🎨 Prompt: ${scene.prompt}</div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+        
+        // Setup dumb timeline animation for fun
+        const timeline = document.getElementById('timeline');
+        timeline.style.width = '100%';
+        timeline.style.transition = `width ${data.duration}s linear`;
+      } catch (e) {
+        document.getElementById('title').innerHTML = `<span style="color:red">Error Loading storyboard.json</span>`;
+        console.error(e);
+      }
+    }
+    
+    loadStoryboard();
+  </script>
+</body>
+</html>

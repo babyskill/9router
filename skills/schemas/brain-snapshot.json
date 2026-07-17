@@ -1,0 +1,167 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "NeuralMemory Brain Snapshot",
+    "description": "Schema for nm-snapshot exported brain state — Portable Consciousness",
+    "type": "object",
+    "required": [
+        "version",
+        "exported_at",
+        "memories",
+        "synapses"
+    ],
+    "properties": {
+        "version": {
+            "type": "string",
+            "const": "1.0"
+        },
+        "exported_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "project": {
+            "type": "string",
+            "description": "Project name from .project-identity"
+        },
+        "scope": {
+            "type": "string",
+            "enum": [
+                "full",
+                "topic",
+                "recent",
+                "high-priority"
+            ]
+        },
+        "memories": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "content",
+                    "type",
+                    "priority",
+                    "created_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "fact",
+                            "decision",
+                            "todo",
+                            "error",
+                            "insight",
+                            "preference",
+                            "instruction",
+                            "workflow",
+                            "context"
+                        ]
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "activation_score": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "recall_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "archived",
+                            "expired"
+                        ]
+                    }
+                }
+            }
+        },
+        "synapses": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "from_id",
+                    "to_id",
+                    "type",
+                    "weight"
+                ],
+                "properties": {
+                    "from_id": {
+                        "type": "string"
+                    },
+                    "to_id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "CAUSED_BY",
+                            "LEADS_TO",
+                            "DISCUSSED",
+                            "CONTRADICTS",
+                            "SUPERSEDES",
+                            "COMPLEMENTS",
+                            "RELATED"
+                        ]
+                    },
+                    "weight": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            }
+        },
+        "stats": {
+            "type": "object",
+            "properties": {
+                "total_memories": {
+                    "type": "integer"
+                },
+                "total_synapses": {
+                    "type": "integer"
+                },
+                "avg_priority": {
+                    "type": "number"
+                },
+                "active_memories": {
+                    "type": "integer"
+                },
+                "archived_memories": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+  "common": {
+    "welcome": "Chào mừng bạn đến với ứng dụng",
+    "loading": "Đang tải...",
+    "submit": "Gửi",
+    "cancel": "Hủy bỏ",
+    "save": "Lưu",
+    "error": "Đã xảy ra lỗi, vui lòng thử lại sau"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "email": "Địa chỉ Email",
+    "password": "Mật khẩu",
+    "forgot_password": "Quên mật khẩu?",
+    "logout": "Đăng xuất"
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "invalid_email": "Định dạng Email không hợp lệ",
+    "min_length": "Mật khẩu phải chứa ít nhất {{count}} ký tự",
+    "password_mismatch": "Mật khẩu xác nhận không khớp"
+  }
+}

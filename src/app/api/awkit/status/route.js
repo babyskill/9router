@@ -1,12 +1,13 @@
 import { stat } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
+import { DATA_DIR } from "@/lib/dataDir";
 
 const PACKAGES = ["core", "skills", "workflows"];
 
 async function getPackageStatus(packageName) {
   const filePath = path.join(
-    process.cwd(),
+    DATA_DIR,
     "storage",
     "awkit",
     `${packageName}.zip`

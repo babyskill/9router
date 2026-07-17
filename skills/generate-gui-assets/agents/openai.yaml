@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate GUI Assets"
+  short_description: "Tao bo GUI assets kem QA manifest"
+  default_prompt: "Dung $generate-gui-assets de tao bo GUI icon dong nhat, co prompt, catalog, contact sheet, va handoff manifest."

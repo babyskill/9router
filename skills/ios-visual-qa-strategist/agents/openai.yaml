@@ -1,0 +1,4 @@
+interface:
+  display_name: "iOS Visual QA Strategist"
+  short_description: "Plan iOS QA with minimal screenshots"
+  default_prompt: "Use $ios-visual-qa-strategist to test this iOS app visually with the fewest screenshots needed."

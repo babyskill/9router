@@ -1,0 +1,20 @@
+/* UI */
+"welcome_message" = "Welcome to the app";
+"common_ok" = "OK";
+"common_cancel" = "Cancel";
+"common_continue" = "Continue";
+"empty_state_title" = "No data available";
+
+/* Auth */
+"auth_login_title" = "Sign In";
+"auth_register_title" = "Create account";
+"auth_logout" = "Log out";
+"auth_forgot_password" = "Forgot Password?";
+"auth_email" = "Email address";
+"auth_password" = "Password";
+
+/* Validation */
+"validation_required" = "This field is required";
+"validation_invalid_email" = "Invalid email format";
+"validation_min_length" = "Must be at least %d characters";
+"validation_password_mismatch" = "Passwords do not match";

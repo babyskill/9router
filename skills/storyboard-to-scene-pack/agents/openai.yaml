@@ -1,0 +1,4 @@
+interface:
+  display_name: "Storyboard Scene Pack"
+  short_description: "Design storyboard and per-scene prompts"
+  default_prompt: "Use $storyboard-to-scene-pack to design a storyboard, generate per-scene 8s prompts, and produce an HTML preview."

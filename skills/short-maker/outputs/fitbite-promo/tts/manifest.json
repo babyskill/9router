@@ -1,0 +1,31 @@
+{
+  "endpoint": "https://api.lucylab.io/json-rpc",
+  "speed": 1.0,
+  "blockVersion": 0,
+  "mode": "script-scenes",
+  "voices": [
+    {
+      "id": "nqak8C85bsAG5mihyunRkj",
+      "name": "Chi Chi",
+      "slug": "chi-chi"
+    }
+  ],
+  "items": [
+    {
+      "label": "scene-01",
+      "text": "Gặp khó khăn khi theo dõi dinh dưỡng hàng ngày?"
+    },
+    {
+      "label": "scene-02",
+      "text": "FitBite Pro với AI thông minh sẽ tự động lên thực đơn chuẩn y khoa cho bạn."
+    },
+    {
+      "label": "scene-03",
+      "text": "Báo cáo chi tiết, giao diện tối ưu hoàn hảo cho cả iPad."
+    },
+    {
+      "label": "scene-04",
+      "text": "Tải ngay FitBite Pro trên App Store để thay đổi vóc dáng!"
+    }
+  ]
+}

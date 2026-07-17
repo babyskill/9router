@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import AdmZip from "adm-zip";
 import fs from "fs";
 import path from "path";
+import { DATA_DIR } from "@/lib/dataDir";
 
 const sanitizeSkillId = (skillId) =>
   (skillId || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -75,7 +76,7 @@ export async function GET(request) {
     }
 
     if (!zipBuffer) {
-      const filePath = path.join(projectRoot, "storage", "awkit", `${pkg}.zip`);
+      const filePath = path.join(DATA_DIR, "storage", "awkit", `${pkg}.zip`);
 
       if (!fs.existsSync(filePath)) {
         return NextResponse.json(

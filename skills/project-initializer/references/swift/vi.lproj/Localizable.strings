@@ -1,0 +1,20 @@
+/* Giao diện */
+"welcome_message" = "Chào mừng đến với ứng dụng";
+"common_ok" = "Đồng ý";
+"common_cancel" = "Hủy";
+"common_continue" = "Tiếp tục";
+"empty_state_title" = "Không có dữ liệu";
+
+/* Xác thực */
+"auth_login_title" = "Đăng nhập";
+"auth_register_title" = "Tạo tài khoản";
+"auth_logout" = "Đăng xuất";
+"auth_forgot_password" = "Quên mật khẩu?";
+"auth_email" = "Địa chỉ email";
+"auth_password" = "Mật khẩu";
+
+/* Hỗ trợ */
+"validation_required" = "Trường này là bắt buộc";
+"validation_invalid_email" = "Định dạng email không hợp lệ";
+"validation_min_length" = "Phải có ít nhất %d ký tự";
+"validation_password_mismatch" = "Mật khẩu không khớp";

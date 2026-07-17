@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- Chặn cứng lỗi hardcode text trong XML layout. Bắt buộc mọi chuỗi text phải khai báo trong strings.xml -->
+    <issue id="HardcodedText" severity="error" />
+</lint>

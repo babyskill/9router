@@ -1,0 +1,908 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "nqak8C85bsAG5mihyunRkj",
+      "name": "Chi Chi",
+      "description": "",
+      "tag": [
+        "nữ",
+        "miền nam",
+        "review"
+      ],
+      "slug": "chi-chi"
+    },
+    {
+      "id": "2LLtWibYKJaiLFeqVkzPGY",
+      "name": "Trung Quân",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "trung-quan"
+    },
+    {
+      "id": "24oEtXGic7NhDjXzmDbDvt",
+      "name": "Quang Anh",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "quang-anh"
+    },
+    {
+      "id": "bZfWWwQVbQZpAsqH93ofCX",
+      "name": "Dung Lồng Tiếng",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền bắc",
+        "lồng tiếng"
+      ],
+      "slug": "dung-long-tieng"
+    },
+    {
+      "id": "8pnEtqZhpNr2wJnCrmVjq5",
+      "name": "Ly Tâm Lý",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "ly-tam-ly"
+    },
+    {
+      "id": "shAfRJNufJUhQSgJUL8NST",
+      "name": "Hà Review",
+      "description": "Đây là một giọng review hay",
+      "tag": [
+        "nữ",
+        "miền bắc",
+        "review"
+      ],
+      "slug": "ha-review"
+    },
+    {
+      "id": "97zRSQPtS6Fg3KEKekxssu",
+      "name": "Quỳnh Giao (nữ đọc thơ)",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền bắc",
+        "đọc thơ"
+      ],
+      "slug": "quynh-giao-nu-doc-tho"
+    },
+    {
+      "id": "6QzFMn95VAXF32Yg3HxEMj",
+      "name": "Quang Review",
+      "description": "Đây là một giọng nói review chân thực",
+      "tag": [
+        "nam",
+        "miền bắc",
+        "review"
+      ],
+      "slug": "quang-review"
+    },
+    {
+      "id": "8VXsCLxU7Pn55ADXQc6sAf",
+      "name": "Chinh Review",
+      "description": "Đây là một giọng nói review hay",
+      "tag": [
+        "nữ",
+        "miền bắc",
+        "review"
+      ],
+      "slug": "chinh-review"
+    },
+    {
+      "id": "18wiGQWRzVqJ1G63xncLmq",
+      "name": "TVC 4",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "quảng cáo",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "tvc-4"
+    },
+    {
+      "id": "uCMfUVPwStduZMyFC7iuQv",
+      "name": "Trinh Review",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "review",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "trinh-review"
+    },
+    {
+      "id": "8GNXzqzEk4AXq64rmSwqtW",
+      "name": "Vy Tin Tức",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "tin tức",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "vy-tin-tuc"
+    },
+    {
+      "id": "mrkX7Bmzt7tZaLNFkk7C4k",
+      "name": "Tô Minh",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nam",
+        "miền nam"
+      ],
+      "slug": "to-minh"
+    },
+    {
+      "id": "336CuLzQzfJKh1zwzQdd4B",
+      "name": "Mỹ Nhân",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "my-nhan"
+    },
+    {
+      "id": "wZtg5gNqQB8YTqHmE64KM2",
+      "name": "Khởi My",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "khoi-my"
+    },
+    {
+      "id": "nN8wUkxT5rBzcGUQgu1yJR",
+      "name": "Hoàng Vy",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "hoang-vy"
+    },
+    {
+      "id": "vcXEe1p3FxPfpswf3BhwbG",
+      "name": "My Review",
+      "description": "Đây là một giọng nói review hay và tự nhiên, siêu nhanh",
+      "tag": [
+        "review",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "my-review"
+    },
+    {
+      "id": "dbwVPnyiUDVFczZUJSBm8R",
+      "name": "Trùng Dương (nữ đọc thơ)",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền bắc",
+        "podcast",
+        "đọc thơ"
+      ],
+      "slug": "trung-duong"
+    },
+    {
+      "id": "qfxyZH7dQWRd7mYdR3JZdS",
+      "name": "TVC 3",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nam",
+        "miền bắc",
+        "tvc",
+        "quảng cáo"
+      ],
+      "slug": "tvc-3"
+    },
+    {
+      "id": "rzAA5scQLEhorKHTJ99166",
+      "name": "TVC 2",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nữ",
+        "miền bắc",
+        "tvc",
+        "quảng cáo"
+      ],
+      "slug": "tvc-2"
+    },
+    {
+      "id": "6T54QXUULgyptBA1nMz6HV",
+      "name": "TVC 1",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "quảng cáo",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "tvc-1"
+    },
+    {
+      "id": "3M2CtRTrbR6t88TcXMvosD",
+      "name": "Bé Minh Anh",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "trẻ em",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "be-minh-anh"
+    },
+    {
+      "id": "hruBcESGYx2AUWRppNacCd",
+      "name": "Huy Vũ",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "podcast",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "huy-vu"
+    },
+    {
+      "id": "gfZKvP9A2mmReyBci9h4pQ",
+      "name": "Hoàng Minh",
+      "description": "Đây là một giọng nói hay và tự nhiên",
+      "tag": [
+        "nam",
+        "miền nam"
+      ],
+      "slug": "hoang-minh"
+    },
+    {
+      "id": "a9zRq7uxbKU9xZGZZuiXyv",
+      "name": "Minh Đàm",
+      "description": "Chất giọng trầm ấm và có duyên kể chuyện, rất phù hợp để đọc truyện kinh dị, trinh thám hay các hồi ký cần sự sâu sắc",
+      "tag": [
+        "đọc truyện",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "minh-dam"
+    },
+    {
+      "id": "26ys7wicEUR9exGcq8GoTb",
+      "name": "Nguyệt Ánh",
+      "description": "Giọng trung trầm, rõ ràng và uy tín như phát thanh viên, phù hợp để dẫn bản tin thời sự, thuyết minh phim tài liệu và lồng tiếng cho video doanh nghiệp trang trọng.",
+      "tag": [
+        "tin tức",
+        "thuyết minh",
+        "lồng tiếng",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "nguyet-anh"
+    },
+    {
+      "id": "djopdg7AzJ2C9JpGkg9jyA",
+      "name": "Thế Anh",
+      "description": "Đây là giọng nam mang xu hướng thủ thỉ, có thể làm các nội dung như kể chuyện, đọc truyện",
+      "tag": [
+        "podcast",
+        "đọc sách",
+        "thuyết minh",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "the-anh"
+    },
+    {
+      "id": "hAe3oYGr4VX4Xy9hGQoTP1",
+      "name": "Thanh Vân",
+      "description": "Hợp đa thể loại như podcast, kể chuyện, lồng tiếng vì giọng cao và dễ nghe",
+      "tag": [
+        "podcast",
+        "vlog",
+        "review",
+        "lồng tiếng",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "thanh-van"
+    },
+    {
+      "id": "cZZToMe2miwmrrDK9zKQSr",
+      "name": "Thế Vinh",
+      "description": "Giọng đàn ông trưởng thành, dễ nghe, nhẹ nhàng, phù hợp với review và podcast",
+      "tag": [
+        "tin tức",
+        "thuyết minh",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "the-vinh"
+    },
+    {
+      "id": "6H2RWte9TZSMLevdb6KZYS",
+      "name": "Minh Triết",
+      "description": "Là giọng nam nhẹ nhàng, tông giọng rất phù hợp dùng để quảng cáo, đọc sách",
+      "tag": [
+        "thuyết minh",
+        "đọc sách",
+        "quảng cáo",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "minh-triet"
+    },
+    {
+      "id": "haNNK2N88aJUAo4zYvD4LX",
+      "name": "Thục Quyên",
+      "description": "Giọng nữ trung niên, nghe chững chạc hợp lồng tiếng",
+      "tag": [
+        "tin tức",
+        "podcast",
+        "lồng tiếng"
+      ],
+      "slug": "thuc-quyen"
+    },
+    {
+      "id": "iZfLW5F2GNy72XZ3gQc4xE",
+      "name": "Quốc Khánh",
+      "description": "Đây là giọng chuyên nghiệp, phfu hợp quảng cáo, đọc tin tức",
+      "tag": [
+        "tin tức",
+        "podcast",
+        "lồng tiếng",
+        "quảng cáo",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "quoc-khanh"
+    },
+    {
+      "id": "vpx8W1mXrSR62VsbdMCpbu",
+      "name": "Phương Thảo",
+      "description": "Giọng trẻ, nghe ấm áp, yêu thương phù hợp để làm podcast chữa lành hoặc kể chuyện",
+      "tag": [
+        "podcast",
+        "kể chuyện",
+        "quảng cáo",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "phuong-thao"
+    },
+    {
+      "id": "8hCU4VeN3b74zsWUDvTH2K",
+      "name": "Hoài Nam",
+      "description": "Chất giọng của mình trầm ấm và truyền cảm, là thế mạnh cho các podcast cần chiều sâu, sách nói và thuyết minh phim tài liệu.",
+      "tag": [
+        "podcast",
+        "sách nói",
+        "lồng tiếng"
+      ],
+      "slug": "hoai-nam"
+    },
+    {
+      "id": "rihUkmHsXzRcv8iKH4qdhU",
+      "name": "Ngọc Bích",
+      "description": "Giọng phụ nữ miền Nam, hợp thuyết minh phim",
+      "tag": [
+        "thuyết minh",
+        "đọc sách",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "ngoc-bich"
+    },
+    {
+      "id": "g6UxV41VXepKGjpBDnPEfr",
+      "name": "Minh Trang",
+      "description": "Đây là giọng của người già, phù hợp làm những nội dung liên quan đến kể chuyện và tin tức",
+      "tag": [
+        "tin tức",
+        "thuyết minh",
+        "nữ",
+        "miền bắc",
+        "người già"
+      ],
+      "slug": "minh-trang"
+    },
+    {
+      "id": "8u97ewbLyV5dwePspwJY1w",
+      "name": "Trường An (Phật Pháp)",
+      "description": "Giọng trung trầm, ấm áp và truyền cảm, mang phong thái tự sự, chiêm nghiệm, phù hợp để đọc sách nói về triết lý, tôn giáo, dẫn podcast có chiều sâu và thuyết minh phim tài liệu lịch sử, văn hóa.",
+      "tag": [
+        "đọc sách",
+        "podcast",
+        "thuyết minh",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "truong-an"
+    },
+    {
+      "id": "sw6XnKjGD6jbz6T3gYYn2z",
+      "name": "Minh Thư",
+      "description": "Giọng cao, hơi ngang dùng đọc sách hoặc thuyết minh",
+      "tag": [
+        "thuyết minh",
+        "đọc sách",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "minh-thu"
+    },
+    {
+      "id": "tyWCP19hE5Wdegixi1qHak",
+      "name": "Thanh Tâm",
+      "description": "Giọng ngọt ngào, dễ nghe, mát tai, có thể hợp đọc sách, kể chuyện những chủ đề chữa lành",
+      "tag": [
+        "thuyết minh",
+        "đọc sách",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "thanh-tam"
+    },
+    {
+      "id": "88sut1iKjfwLAzGv8PmVyA",
+      "name": "Quốc Bảo",
+      "description": "Đây là giọng nam trầm ấm, hơi nghẹt mũi, có thể dùng làm podcast",
+      "tag": [
+        "thuyết minh",
+        "podcast",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "quoc-bao"
+    },
+    {
+      "id": "5htEMY5LX9fGb6GVWsb4f4",
+      "name": "Thu Hằng",
+      "description": "Giọng phụ nữ lớn tuổi, hơi vang, uy tín dùng đọc tin tức và thuyết minh",
+      "tag": [
+        "tin tức",
+        "thuyết minh",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "thu-hang"
+    },
+    {
+      "id": "2cBibQ9vdfBzjXGRzmpQb1",
+      "name": "Thục Đoan",
+      "description": "Giọng trung cao, trong trẻo và dịu dàng, phù hợp để thuyết minh các video kiến thức, đọc truyện thiếu nhi và lồng tiếng cho các nhân vật ôn hòa.",
+      "tag": [
+        "thuyết minh",
+        "đọc truyện",
+        "lồng tiếng",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "thuc-doan"
+    },
+    {
+      "id": "tvz7DUQmcbNCVEbZXZzPUm",
+      "name": "Ngọc Nhi",
+      "description": "Giọng nữ trẻ tự nhiên làm các nội dung về đời sống",
+      "tag": [
+        "podcast",
+        "vlog",
+        "review",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "ngoc-nhi"
+    },
+    {
+      "id": "iRWdJ2BybYdbGvunPPAx8e",
+      "name": "Minh Đức",
+      "description": "Chất giọng hơi đục và nghiêm túc, có thể sử dụng để làm các nội dung về kiến thức, khoa học và chuyên ngành",
+      "tag": [
+        "thuyết minh",
+        "đọc sách",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "minh-duc"
+    },
+    {
+      "id": "6qPHWB2qhn9QK8QjrPPSHz",
+      "name": "Thu Hà",
+      "description": "Giọng trầm ấm để đọc sách, kể chuyện, thuyết minh",
+      "tag": [
+        "đọc sách",
+        "podcast",
+        "thuyết minh",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "thu-ha"
+    },
+    {
+      "id": "jLqsf4SyLPEc4QgVvUNqX7",
+      "name": "Tú Anh",
+      "description": "Chất giọng nữ trung cao, trong trẻo và chuyên nghiệp, phù hợp để thuyết minh video khoa học, y tế, đọc sách chuyên ngành và quảng cáo dược phẩm.",
+      "tag": [
+        "thuyết minh",
+        "đọc sách",
+        "quảng cáo",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "tu-anh"
+    },
+    {
+      "id": "v7jDD4YGUAxweJ2YGrpwB6",
+      "name": "An Chi",
+      "description": "Giọng rất dịu dàng, nhẹ nhàng, ngọt ngào, phù hợp làm các nội dung như đọc truyện, kể chuyện, lồng tiếng các chủ đề dễ thương",
+      "tag": [
+        "lồng tiếng",
+        "đọc truyện",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "an-chi"
+    },
+    {
+      "id": "tYEo3Q6Ef8pBhYMKgnNh5U",
+      "name": "Phương Khanh",
+      "description": "Giọng nữ miền Nam, nhẹ nhàng, ngọt ngào, dễ nghe, có thể dùng làm giọng tổng đài hoặc thuyết minh",
+      "tag": [
+        "thuyết minh",
+        "tổng đài",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "phuong-khanh"
+    },
+    {
+      "id": "u4ZCcxDX4FJScdJ97iN8pr",
+      "name": "Tùng Sơn",
+      "description": "Giọng trung trầm, gằn nhẹ và tự tin, phù hợp để lồng tiếng phim hành động, game và dẫn các kênh review, podcast mạnh mẽ.",
+      "tag": [
+        "lồng tiếng",
+        "review",
+        "podcast",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "tung-son"
+    },
+    {
+      "id": "3b7Shbr2LFkFCju4vifNKE",
+      "name": "Thế Phong",
+      "description": "Giọng này ấm áp, có thể làm các nội dung liên quan về cảm xúc như kể chuyện",
+      "tag": [
+        "podcast",
+        "đọc truyện",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "the-phong"
+    },
+    {
+      "id": "2VbzfSGG7i95RpgWZnLZe8",
+      "name": "Minh Khôi",
+      "description": "Giọng uy tín, có lực phù hợp để dẫn bản tin, podcast liên quan về kiến thức.",
+      "tag": [
+        "tin tức",
+        "podcast",
+        "review",
+        "quảng cáo",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "minh-khoi"
+    },
+    {
+      "id": "cLZiqtzLcKYqwYrWJemAJH",
+      "name": "Chi Mai",
+      "description": "Giọng mình ấm ấp, lại non nớt như giọng trẻ con. Thế nên sẽ phù hợp dể lồng tiếng cho các nhân vật hoạt hình, đọc truyện hoặc podcast",
+      "tag": [
+        "lồng tiếng",
+        "đọc truyện",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "chi-mai"
+    },
+    {
+      "id": "7Tb4dvGZyJMPjnnfxVBgik",
+      "name": "Đức Trung",
+      "description": "Là giọng nam quyền lực, trầm, làm quảng cáo, podcast",
+      "tag": [
+        "podcast",
+        "vlog",
+        "quảng cáo",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "duc-trung"
+    },
+    {
+      "id": "dpxHYxJGqiAiHCg9D4JBk4",
+      "name": "Anh Khoa",
+      "description": "Giọng miền Nam, mộc mạc gần gũi làm nội dung kể chuyện đời sống hang ngày",
+      "tag": [
+        "vlog",
+        "podcast",
+        "giải trí",
+        "miền nam",
+        "nam"
+      ],
+      "slug": "anh-khoa"
+    },
+    {
+      "id": "1c4rf849izGf7zztcGtXA7",
+      "name": "Khánh Vy",
+      "description": "Giọng này cao, nghe hơi đanh đá một chút, rất phù hợp để kể chuyện và các nội dung về giải trí",
+      "tag": [
+        "lồng tiếng",
+        "giải trí",
+        "vlog",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "khanh-vy"
+    },
+    {
+      "id": "2TaxcHbtNNqJGpTRyJLjff",
+      "name": "Bảo Trân",
+      "description": "Giọng tôi trong và giàu biểu cảm, phù hợp để lồng tiếng nhân vật cá tính và dẫn dắt các nội dung đời sống như vlog hay kể chuyện",
+      "tag": [
+        "lồng tiếng",
+        "kể chuyện",
+        "vlog",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "bao-tran"
+    },
+    {
+      "id": "dk2HpvcBQdGXemGDC4tPVG",
+      "name": "Quang Dũng",
+      "description": "Giọng chuyên nghiệp, miền Nam, rất lý tưởng để dẫn chương trình, đọc sách",
+      "tag": [
+        "dẫn chương trình",
+        "đọc sách",
+        "lồng tiếng",
+        "quảng cáo",
+        "miền nam",
+        "nam"
+      ],
+      "slug": "quang-dung"
+    },
+    {
+      "id": "uobbZcxkiZkiswFWyBjuAb",
+      "name": "Mỹ Linh",
+      "description": "Là giọng miền Nam, giản dị, mộc mạc, có thể dùng cho các nội dung về tin tức hoặc kể chuyện",
+      "tag": [
+        "tin tức",
+        "podcast",
+        "thuyết minh",
+        "miền nam",
+        "nữ"
+      ],
+      "slug": "my-linh"
+    },
+    {
+      "id": "gnoVdXi4baD2jcWqGp29KF",
+      "name": "Hà My",
+      "description": "Giọng nữ, chuyên nghiệp rất phù hợp để dẫn chương trình, kể chuyện đa thể loại",
+      "tag": [
+        "lồng tiếng",
+        "podcast",
+        "kể chuyện",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "ha-my"
+    },
+    {
+      "id": "fKyPyzozYVrwQhv728Kf4B",
+      "name": "Hùng Dũng",
+      "description": "Đây là giọng nam trung niên, rất thích hợp để làm các thể loại như phim kiếm hiệp",
+      "tag": [
+        "lồng tiếng",
+        "thuyết minh",
+        "đọc truyện",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "hung-dung"
+    },
+    {
+      "id": "ftLgD4USbTRjx3yStK5SbW",
+      "name": "Thái Sơn",
+      "description": "Giọng đàn ông, hơi đục, kể chuyện và lồng tiếng thì lý tưởng",
+      "tag": [
+        "lồng tiếng",
+        "review",
+        "dẫn chương trình",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "thai-son"
+    },
+    {
+      "id": "ryt8K5sfHdpHJPS15e1NbR",
+      "name": "Gia Khiêm",
+      "description": "Chất giọng trầm ấm, điềm đạm, hợp với kiểu tự sự như làm podcast tâm sự, đọc sách về cuộc sống, hay lồng tiếng cho vai nội tâm.",
+      "tag": [
+        "podcast",
+        "đọc sách",
+        "lồng tiếng",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "gia-khiem"
+    },
+    {
+      "id": "r3rhqaWHRsNdnhCuirkerA",
+      "name": "Thành Trung",
+      "description": "Giọng này trầm ấm, kiểu kể chuyện có nhấn nhá. Hợp nhất là đọc mấy truyện xưa, hay thuyết minh phim tài liệu, lịch sử.",
+      "tag": [
+        "tiểu thuyết",
+        "lồng tiếng",
+        "nam",
+        "miền nam"
+      ],
+      "slug": "thanh-trung"
+    },
+    {
+      "id": "6ucdzNGUe4AMtKVTu3w5Lm",
+      "name": "Trung Kiên",
+      "description": "Giọng rõ ràng, tự nhiên, thích hợp cho tin tức, podcast và video hướng dẫn.",
+      "tag": [
+        "tin tức",
+        "podcast",
+        "thuyết minh",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "trung-kien"
+    },
+    {
+      "id": "8qoSogmhCAZA2Rgvgss56M",
+      "name": "Minh Nguyệt",
+      "description": "Giọng nữ cao, chuyên nghiệp",
+      "tag": [
+        "dẫn chương trình",
+        "lồng tiếng",
+        "podcast",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "minh-nguyet"
+    },
+    {
+      "id": "dTqpG5DfoqexJzvb2DK1YE",
+      "name": "Đăng Khôi",
+      "description": "Là giọng nam, hơi gấp gáp nhưng nghe rõ hợp để review, giải trí",
+      "tag": [
+        "lồng tiếng",
+        "review",
+        "giải trí",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "dang-khoi"
+    },
+    {
+      "id": "5sP6NjV9vZ2DM4gpZrfVjy",
+      "name": "Kim Oanh",
+      "description": "Giọng trầm, rõ, phù hợp để đọc truyện, làm podcast",
+      "tag": [
+        "lồng tiếng",
+        "đọc truyện",
+        "podcast",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "kim-oanh"
+    },
+    {
+      "id": "u9YQjS2CfEJ3foHemQrm8j",
+      "name": "Bách Tùng",
+      "description": "Giọng nam lớn tuổi, trầm khàn, uy lực và từng trải, phù hợp cho phim tài liệu lịch sử, hồi ký và lồng tiếng cho các nhân vật hiền triết.",
+      "tag": [
+        "lồng tiếng",
+        "kể chuyện",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "bach-tung"
+    },
+    {
+      "id": "hKHXND5SU1srscKrYiUHFZ",
+      "name": "Quang Minh",
+      "description": "Giọng này nghe rõ và tự tin, phù hợp đọc các bản tin hoặc các quảng cáo cần sự tin tưởng.",
+      "tag": [
+        "tin tức",
+        "podcast",
+        "quảng cáo",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "quang-minh"
+    },
+    {
+      "id": "cACFxDTEUiNBcCSpmJbgwj",
+      "name": "Bảo Anh",
+      "description": "Giọng dịu dàng, nghe ấm áp, chữa lành có thể dùng để kể chuyện, lồng tiếng truyện cho trẻ em.",
+      "tag": [
+        "lồng tiếng",
+        "đọc truyện",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "bao-anh"
+    },
+    {
+      "id": "oyCEdMyAxLfEccXnucJLLz",
+      "name": "Thanh Mai",
+      "description": "Đây là giọng nữ có tông giọng cao nhưng có xu hướng thủ thỉ nên dùng làm podcast hay đọc truyện lãng mạn.",
+      "tag": [
+        "đọc truyện",
+        "podcast",
+        "lồng tiếng",
+        "nữ",
+        "miền bắc"
+      ],
+      "slug": "thanh-mai"
+    },
+    {
+      "id": "ohroJGFD8rCxMTre6daVmk",
+      "name": "Minh Tuệ",
+      "description": "Là giọng của phụ nữ trung niên, nghe quyền lực, phù hợp lồng tiếng cho các nhân vật quyền lực trong phim, hoặc có thể đọc tin tức",
+      "tag": [
+        "lồng tiếng",
+        "tin tức",
+        "podcast",
+        "nữ",
+        "miền nam"
+      ],
+      "slug": "minh-tue"
+    },
+    {
+      "id": "cWW2JNHiUALxNeuxGrGis3",
+      "name": "Khả Ngân",
+      "description": "Giọng tự nhiên, nhanh nhẹn, năng động, các bạn có thể dùng để làm review, làm phim",
+      "tag": [
+        "lồng tiếng",
+        "vj",
+        "review"
+      ],
+      "slug": "kha-ngan"
+    },
+    {
+      "id": "2rECfs5gZFwLVmbGyfNDrE",
+      "name": "Đức Anh",
+      "description": "Giọng cao, vang, nhanh, nhấn nhá, làm các thể loại review hoặc quảng cáo.",
+      "tag": [
+        "review",
+        "podcast",
+        "quảng cáo",
+        "nam",
+        "miền bắc"
+      ],
+      "slug": "duc-anh"
+    },
+    {
+      "id": "q5PHWcYGpPNKAzBt25zdkY",
+      "name": "An Nhiên",
+      "description": "Giọng nữ trẻ, trong, có nhấn nhá thích hợp kể chuyện chữa lành hay đọc sách nói.",
+      "tag": [
+        "podcast",
+        "kể chuyện",
+        "sách nói",
+        "nữ"
+      ],
+      "slug": "an-nhien"
+    }
+  ]
+}

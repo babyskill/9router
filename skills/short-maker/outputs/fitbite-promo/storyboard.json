@@ -1,0 +1,38 @@
+{
+    "project": "fitbite-promo",
+    "background_music": "energetic_corporate_pop",
+    "scenes": [
+        {
+            "id": "scene-01",
+            "type": "hook",
+            "image_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, pointing directly at the camera with an excited but empathetic expression, standing on a solid chroma green screen background, highly detailed, cinematic lighting, 8k resolution.",
+            "video_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, pointing directly at the camera with an excited but empathetic expression, standing on a solid chroma green screen background. She speaks with a British accent: \"Struggling to keep track of your daily nutrition?\". High quality, smooth motion, 4k.",
+            "tts_text": "Struggling to keep track of your daily nutrition?",
+            "status": "pending_image"
+        },
+        {
+            "id": "scene-02",
+            "type": "interest",
+            "image_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, looking at a modern smartphone in her hand and smiling broadly, standing on a solid chroma green screen background, highly detailed, cinematic lighting, 8k resolution.",
+            "video_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, looking at a modern smartphone in her hand and smiling broadly, standing on a solid chroma green screen background. She speaks with a British accent: \"FitWitness, with its smart AI, will automatically create medically approved meal plans for you.\". High quality, smooth motion, 4k.",
+            "tts_text": "FitWitness, with its smart AI, will automatically create medically approved meal plans for you.",
+            "status": "pending_image"
+        },
+        {
+            "id": "scene-03",
+            "type": "desire",
+            "image_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, standing in a strong confident pose with arms crossed, nodding approvingly, standing on a solid chroma green screen background, highly detailed, cinematic lighting, 8k resolution.",
+            "video_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, standing in a strong confident pose with arms crossed, nodding approvingly, standing on a solid chroma green screen background. She speaks with a British accent: \"Detailed reports, and an interface perfectly optimised for iPad.\". High quality, smooth motion, 4k.",
+            "tts_text": "Detailed reports, and an interface perfectly optimised for iPad.",
+            "status": "pending_image"
+        },
+        {
+            "id": "scene-04",
+            "type": "action",
+            "image_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, showing a download now gesture by pointing down with both index fingers, standing on a solid chroma green screen background, highly detailed, cinematic lighting, 8k resolution.",
+            "video_prompt": "A young enthusiastic female fitness coach wearing modern sports attire, showing a download now gesture by pointing down with both index fingers, standing on a solid chroma green screen background. She speaks with a British accent: \"Download FitWitness on the App Store today to transform your body!\". High quality, smooth motion, 4k.",
+            "tts_text": "Download FitWitness on the App Store today to transform your body!",
+            "status": "pending_image"
+        }
+    ]
+}

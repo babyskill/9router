@@ -1183,7 +1183,7 @@ export default function SkillsPage() {
         isOpen={showPackageModal}
         onClose={() => setShowPackageModal(false)}
         title={editingPackage ? "Edit Skill Package" : "Create Skill Package"}
-        size="lg"
+        size="full"
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowPackageModal(false)}>
@@ -1241,7 +1241,7 @@ export default function SkillsPage() {
                 </button>
               </div>
             </div>
-            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 max-h-[300px] overflow-y-auto rounded-lg border border-border p-3">
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-[300px] overflow-y-auto rounded-lg border border-border p-3">
               {skills
                 .filter(
                   (s) =>

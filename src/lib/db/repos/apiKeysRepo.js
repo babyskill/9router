@@ -17,6 +17,7 @@ function rowToKey(row) {
       row.allowSkills === undefined
         ? true
         : row.allowSkills === 1 || row.allowSkills === true,
+    skillPackageId: row.skillPackageId || null,
     quotaLimitUsd: row.quotaLimitUsd == null ? null : Number(row.quotaLimitUsd),
     quotaUsageUsd: Number(row.quotaUsageUsd ?? 0),
     quotaLimitTokens: row.quotaLimitTokens == null ? null : Number(row.quotaLimitTokens),
@@ -37,13 +38,20 @@ export async function getApiKeyById(id) {
   return rowToKey(row);
 }
 
+export async function getApiKeyByKey(key) {
+  const db = await getAdapter();
+  const row = db.get(`SELECT * FROM apiKeys WHERE key = ?`, [key]);
+  return rowToKey(row);
+}
+
 export async function createApiKey(
   name,
   machineId,
   quotaLimitUsd = null,
   quotaLimitTokens = null,
   allow9Router = true,
-  allowSkills = true
+  allowSkills = true,
+  skillPackageId = null
 ) {
   if (!machineId) throw new Error("machineId is required");
   const db = await getAdapter();
@@ -57,6 +65,7 @@ export async function createApiKey(
     isActive: true,
     allow9Router,
     allowSkills,
+    skillPackageId,
     quotaLimitUsd,
     quotaUsageUsd: 0,
     quotaLimitTokens,
@@ -64,10 +73,11 @@ export async function createApiKey(
     createdAt: new Date().toISOString(),
   };
   db.run(
-    `INSERT INTO apiKeys(id, key, name, machineId, isActive, allow9Router, allowSkills, quotaLimitUsd, quotaUsageUsd, quotaLimitTokens, quotaUsageTokens, createdAt) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO apiKeys(id, key, name, machineId, isActive, allow9Router, allowSkills, skillPackageId, quotaLimitUsd, quotaUsageUsd, quotaLimitTokens, quotaUsageTokens, createdAt) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       apiKey.id, apiKey.key, apiKey.name, apiKey.machineId, 1,
       apiKey.allow9Router ? 1 : 0, apiKey.allowSkills ? 1 : 0,
+      apiKey.skillPackageId,
       apiKey.quotaLimitUsd, apiKey.quotaUsageUsd,
       apiKey.quotaLimitTokens, apiKey.quotaUsageTokens, apiKey.createdAt,
     ]
@@ -83,10 +93,11 @@ export async function updateApiKey(id, data) {
     if (!row) return;
     const merged = { ...rowToKey(row), ...data };
     db.run(
-      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, allow9Router = ?, allowSkills = ?, quotaLimitUsd = ?, quotaUsageUsd = ?, quotaLimitTokens = ?, quotaUsageTokens = ? WHERE id = ?`,
+      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, allow9Router = ?, allowSkills = ?, skillPackageId = ?, quotaLimitUsd = ?, quotaUsageUsd = ?, quotaLimitTokens = ?, quotaUsageTokens = ? WHERE id = ?`,
       [
         merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0,
         merged.allow9Router ? 1 : 0, merged.allowSkills ? 1 : 0,
+        merged.skillPackageId,
         merged.quotaLimitUsd, merged.quotaUsageUsd,
         merged.quotaLimitTokens, merged.quotaUsageTokens, id,
       ]

@@ -25,6 +25,7 @@ export async function POST(request) {
       quotaLimitTokens = null,
       allow9Router = true,
       allowSkills = true,
+      skillPackageId = null,
     } = body;
 
     if (!name) {
@@ -39,7 +40,8 @@ export async function POST(request) {
       quotaLimitUsd,
       quotaLimitTokens,
       allow9Router,
-      allowSkills
+      allowSkills,
+      skillPackageId
     );
 
     return NextResponse.json({
@@ -51,6 +53,7 @@ export async function POST(request) {
       quotaLimitTokens: apiKey.quotaLimitTokens,
       allow9Router: apiKey.allow9Router,
       allowSkills: apiKey.allowSkills,
+      skillPackageId: apiKey.skillPackageId,
     }, { status: 201 });
   } catch (error) {
     console.log("Error creating key:", error);

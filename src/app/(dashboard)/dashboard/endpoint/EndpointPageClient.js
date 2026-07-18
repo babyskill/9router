@@ -19,6 +19,7 @@ import Tooltip from "./components/Tooltip";
 import SecurityWarning from "./components/SecurityWarning";
 export default function APIPageClient({ machineId }) {
   const [keys, setKeys] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
@@ -26,6 +27,7 @@ export default function APIPageClient({ machineId }) {
   const [newKeyQuotaLimitTokens, setNewKeyQuotaLimitTokens] = useState("");
   const [newKeyAllow9Router, setNewKeyAllow9Router] = useState(true);
   const [newKeyAllowSkills, setNewKeyAllowSkills] = useState(true);
+  const [newKeySkillPackageId, setNewKeySkillPackageId] = useState("");
   const [createdKey, setCreatedKey] = useState(null);
   const [editingKey, setEditingKey] = useState(null);
   const [editingKeyName, setEditingKeyName] = useState("");
@@ -33,6 +35,7 @@ export default function APIPageClient({ machineId }) {
   const [editingKeyQuotaLimitTokens, setEditingKeyQuotaLimitTokens] = useState("");
   const [editingKeyAllow9Router, setEditingKeyAllow9Router] = useState(true);
   const [editingKeyAllowSkills, setEditingKeyAllowSkills] = useState(true);
+  const [editingKeySkillPackageId, setEditingKeySkillPackageId] = useState("");
   const [confirmState, setConfirmState] = useState(null);
 
   const [requireApiKey, setRequireApiKey] = useState(false);
@@ -265,10 +268,17 @@ export default function APIPageClient({ machineId }) {
 
   const fetchData = async () => {
     try {
-      const keysRes = await fetch("/api/keys");
+      const [keysRes, pkgsRes] = await Promise.all([
+        fetch("/api/keys"),
+        fetch("/api/awkit/packages")
+      ]);
       const keysData = await keysRes.json();
       if (keysRes.ok) {
         setKeys(keysData.keys || []);
+      }
+      if (pkgsRes.ok) {
+        const pkgsData = await pkgsRes.json();
+        setPackages(pkgsData || []);
       }
     } catch (error) {
       console.log("Error fetching data:", error);
@@ -631,6 +641,7 @@ export default function APIPageClient({ machineId }) {
             newKeyQuotaLimitTokens === "" ? null : parseInt(newKeyQuotaLimitTokens, 10),
           allow9Router: newKeyAllow9Router,
           allowSkills: newKeyAllowSkills,
+          skillPackageId: newKeySkillPackageId || null,
         }),
       });
       const data = await res.json();
@@ -643,6 +654,7 @@ export default function APIPageClient({ machineId }) {
         setNewKeyQuotaLimitTokens("");
         setNewKeyAllow9Router(true);
         setNewKeyAllowSkills(true);
+        setNewKeySkillPackageId("");
         setShowAddModal(false);
       }
     } catch (error) {
@@ -695,6 +707,7 @@ export default function APIPageClient({ machineId }) {
     setEditingKeyQuotaLimitTokens("");
     setEditingKeyAllow9Router(true);
     setEditingKeyAllowSkills(true);
+    setEditingKeySkillPackageId("");
   };
 
   const handleUpdateKey = async () => {
@@ -714,6 +727,7 @@ export default function APIPageClient({ machineId }) {
               : parseInt(editingKeyQuotaLimitTokens, 10),
           allow9Router: editingKeyAllow9Router,
           allowSkills: editingKeyAllowSkills,
+          skillPackageId: editingKeySkillPackageId || null,
         }),
       });
       const data = await res.json();
@@ -1117,6 +1131,11 @@ export default function APIPageClient({ machineId }) {
                           [Skills]
                         </span>
                       )}
+                      {key.allowSkills && key.skillPackageId && (
+                        <span className="rounded bg-brand-500/10 px-1.5 py-0.5 text-[10px] text-brand-500">
+                          Pack: {packages.find((p) => p.id === key.skillPackageId)?.name || "Bound"}
+                        </span>
+                      )}
                     </div>
                     <p>
                       Usage: ${(key.quotaUsageUsd || 0).toFixed(4)} / {key.quotaLimitUsd !== null
@@ -1165,6 +1184,7 @@ export default function APIPageClient({ machineId }) {
                       );
                       setEditingKeyAllow9Router(key.allow9Router ?? true);
                       setEditingKeyAllowSkills(key.allowSkills ?? true);
+                      setEditingKeySkillPackageId(key.skillPackageId || "");
                     }}
                     className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-all"
                     title="Edit key"
@@ -1227,6 +1247,23 @@ export default function APIPageClient({ machineId }) {
               <span>Allow Skill/AWKit downloads</span>
               <Toggle checked={newKeyAllowSkills} onChange={setNewKeyAllowSkills} />
             </label>
+            {newKeyAllowSkills && packages.length > 0 && (
+              <div className="flex flex-col gap-1 text-sm mt-1 border-t border-border pt-2">
+                <span className="text-xs text-text-muted">Bound Skill Package</span>
+                <select
+                  className="w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-text-main focus:border-brand-500/40 focus:outline-none"
+                  value={newKeySkillPackageId}
+                  onChange={(e) => setNewKeySkillPackageId(e.target.value)}
+                >
+                  <option value="">None (Allow all skills)</option>
+                  {packages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} ({pkg.skills?.length || 0} skills)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim()}>
@@ -1240,6 +1277,7 @@ export default function APIPageClient({ machineId }) {
                 setNewKeyQuotaLimitTokens("");
                 setNewKeyAllow9Router(true);
                 setNewKeyAllowSkills(true);
+                setNewKeySkillPackageId("");
               }}
               variant="ghost"
               fullWidth
@@ -1320,6 +1358,23 @@ export default function APIPageClient({ machineId }) {
               <span>Allow Skill/AWKit downloads</span>
               <Toggle checked={editingKeyAllowSkills} onChange={setEditingKeyAllowSkills} />
             </label>
+            {editingKeyAllowSkills && packages.length > 0 && (
+              <div className="flex flex-col gap-1 text-sm mt-1 border-t border-border pt-2">
+                <span className="text-xs text-text-muted">Bound Skill Package</span>
+                <select
+                  className="w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-text-main focus:border-brand-500/40 focus:outline-none"
+                  value={editingKeySkillPackageId}
+                  onChange={(e) => setEditingKeySkillPackageId(e.target.value)}
+                >
+                  <option value="">None (Allow all skills)</option>
+                  {packages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} ({pkg.skills?.length || 0} skills)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <Button onClick={handleUpdateKey} fullWidth disabled={!editingKeyName.trim()}>

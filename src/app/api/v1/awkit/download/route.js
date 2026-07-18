@@ -3,14 +3,27 @@ import AdmZip from "adm-zip";
 import fs from "fs";
 import path from "path";
 import { DATA_DIR } from "@/lib/dataDir";
+import { getApiKeyByKey, getSkillPackageById } from "@/lib/localDb";
+import { resolveSkillDirectory } from "@/lib/customSkills";
 
 const sanitizeSkillId = (skillId) =>
   (skillId || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
 
 const skillDirExists = (projectRoot, skillId) => {
   if (!skillId) return false;
-  const skillDir = path.join(projectRoot, "skills", skillId);
-  return fs.existsSync(skillDir) && fs.statSync(skillDir).isDirectory();
+  const skillDir = resolveSkillDirectory(skillId)?.directory;
+  return skillDir && fs.existsSync(skillDir) && fs.statSync(skillDir).isDirectory();
+};
+
+const extractApiKey = (req) => {
+  const auth = req.headers.get("Authorization");
+  if (auth?.startsWith("Bearer ")) return auth.slice(7);
+  const keyHeader = req.headers.get("x-api-key");
+  if (keyHeader) return keyHeader;
+  const googHeader = req.headers.get("x-goog-api-key");
+  if (googHeader) return googHeader;
+  const { searchParams } = new URL(req.url);
+  return searchParams.get("key") || null;
 };
 
 export async function GET(request) {
@@ -33,6 +46,20 @@ export async function GET(request) {
     );
   }
 
+  // 1. Resolve API key and linked package
+  const apiKey = extractApiKey(request);
+  let skillPackage = null;
+  if (apiKey) {
+    try {
+      const keyDetails = await getApiKeyByKey(apiKey);
+      if (keyDetails?.skillPackageId) {
+        skillPackage = await getSkillPackageById(keyDetails.skillPackageId);
+      }
+    } catch (e) {
+      console.error("Failed to retrieve key/package details:", e);
+    }
+  }
+
   try {
     let zipBuffer;
     let filename = `awkit-${pkg}.zip`;
@@ -53,26 +80,58 @@ export async function GET(request) {
       const zip = new AdmZip();
 
       for (const skillId of selectedSkillIds) {
-        const skillDir = path.join(projectRoot, "skills", skillId);
-        zip.addLocalFolder(skillDir, `skills/${skillId}`);
+        const skillDir = resolveSkillDirectory(skillId)?.directory;
+        if (skillDir) {
+          zip.addLocalFolder(skillDir, `skills/${skillId}`);
+        }
       }
 
       zipBuffer = zip.toBuffer();
       filename = "awkit-custom-skills.zip";
     } else if (pkg === "skills") {
-      const skillsDir = path.join(projectRoot, "skills");
+      // If a package is bound to this key, package only those skills
+      if (skillPackage) {
+        const selectedSkillIds = skillPackage.skills || [];
+        if (selectedSkillIds.length === 0) {
+          return NextResponse.json(
+            { error: "No skills configured in the assigned package" },
+            { status: 400 }
+          );
+        }
 
-      if (fs.existsSync(skillsDir)) {
         const zip = new AdmZip();
-        zip.addLocalFolder(skillsDir, "skills");
+        let addedCount = 0;
+        for (const skillId of selectedSkillIds) {
+          const res = resolveSkillDirectory(skillId);
+          if (res && fs.existsSync(res.directory)) {
+            zip.addLocalFolder(res.directory, `skills/${skillId}`);
+            addedCount++;
+          }
+        }
+        if (addedCount === 0) {
+          return NextResponse.json(
+            { error: "No valid skills from the package found on the server" },
+            { status: 404 }
+          );
+        }
         zipBuffer = zip.toBuffer();
+      } else {
+        // Default behavior: zip the entire built-in skills directory
+        const skillsDir = path.join(projectRoot, "skills");
+        if (fs.existsSync(skillsDir)) {
+          const zip = new AdmZip();
+          zip.addLocalFolder(skillsDir, "skills");
+          zipBuffer = zip.toBuffer();
+        }
       }
     } else if (!groupPackages.includes(pkg) && skillDirExists(projectRoot, sanitizedPkg)) {
-      const skillDir = path.join(projectRoot, "skills", sanitizedPkg);
-      const zip = new AdmZip();
-      zip.addLocalFolder(skillDir);
-      zipBuffer = zip.toBuffer();
-      filename = `awkit-${sanitizedPkg}.zip`;
+      const skillDir = resolveSkillDirectory(sanitizedPkg)?.directory;
+      if (skillDir) {
+        const zip = new AdmZip();
+        zip.addLocalFolder(skillDir);
+        zipBuffer = zip.toBuffer();
+        filename = `awkit-${sanitizedPkg}.zip`;
+      }
     }
 
     if (!zipBuffer) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Card, ConfirmModal, Drawer, Modal, Pagination } from "@/shared/components";
+import { Badge, Button, Card, ConfirmModal, Drawer, Input, Modal, Pagination } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { SKILLS_REPO_URL } from "@/shared/constants/skills";
 
@@ -98,6 +98,17 @@ export default function SkillsPage() {
   const [customSkillError, setCustomSkillError] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState("skills");
+  const [packages, setPackages] = useState([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [showPackageModal, setShowPackageModal] = useState(false);
+  const [editingPackage, setEditingPackage] = useState(null);
+  const [packageName, setPackageName] = useState("");
+  const [packageDesc, setPackageDesc] = useState("");
+  const [packageSkills, setPackageSkills] = useState([]);
+  const [savingPackage, setSavingPackage] = useState(false);
+  const [packageError, setPackageError] = useState(null);
+  const [deletingPackageId, setDeletingPackageId] = useState(null);
   const [pageSize, setPageSize] = useState(9);
   const [editorSkill, setEditorSkill] = useState(null);
   const [skillFiles, setSkillFiles] = useState([]);
@@ -175,10 +186,104 @@ export default function SkillsPage() {
     }
   }, []);
 
+  const fetchPackages = useCallback(async () => {
+    setLoadingPackages(true);
+    try {
+      const response = await fetch("/api/awkit/packages", { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load packages");
+      setPackages(data);
+    } catch (error) {
+      console.error("Failed to load packages:", error);
+    } finally {
+      setLoadingPackages(false);
+    }
+  }, []);
+
+  const handleSavePackage = async () => {
+    if (!packageName.trim()) return;
+    setSavingPackage(true);
+    setPackageError(null);
+
+    const payload = {
+      name: packageName.trim(),
+      description: packageDesc,
+      skills: packageSkills,
+    };
+
+    try {
+      let res;
+      if (editingPackage) {
+        res = await fetch(`/api/awkit/packages?id=${editingPackage.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/awkit/packages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save package");
+
+      await fetchPackages();
+      setShowPackageModal(false);
+      setEditingPackage(null);
+      setPackageName("");
+      setPackageDesc("");
+      setPackageSkills([]);
+    } catch (e) {
+      setPackageError(e.message);
+    } finally {
+      setSavingPackage(false);
+    }
+  };
+
+  const handleDeletePackage = async (id) => {
+    try {
+      const res = await fetch(`/api/awkit/packages?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setPackages((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete package");
+      }
+    } catch (e) {
+      console.error("Error deleting package:", e);
+    } finally {
+      setDeletingPackageId(null);
+    }
+  };
+
+  const openAddPackageModal = () => {
+    setEditingPackage(null);
+    setPackageName("");
+    setPackageDesc("");
+    setPackageSkills([]);
+    setPackageError(null);
+    setShowPackageModal(true);
+  };
+
+  const openEditPackageModal = (pkg) => {
+    setEditingPackage(pkg);
+    setPackageName(pkg.name);
+    setPackageDesc(pkg.description || "");
+    setPackageSkills(pkg.skills || []);
+    setPackageError(null);
+    setShowPackageModal(true);
+  };
+
   useEffect(() => {
     fetchPackageStatuses();
     fetchSkills();
-  }, [fetchPackageStatuses, fetchSkills]);
+    fetchPackages();
+  }, [fetchPackageStatuses, fetchSkills, fetchPackages]);
 
   const handleCustomSkillUpload = async (file) => {
     if (!file) return;
@@ -499,12 +604,44 @@ export default function SkillsPage() {
       </section>
 
       <section className="space-y-5">
-        <SectionHeading
-          eyebrow="Library"
-          title="Custom Skills Manager"
-          description="Upload individual skill archives, manage your library, and select exactly what goes into a custom bundle."
-        />
-        <Card padding="md">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab("skills")}
+              className={`pb-2 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === "skills"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-text-muted hover:text-text-main"
+              }`}
+            >
+              Custom Skills
+            </button>
+            <button
+              onClick={() => setActiveTab("packages")}
+              className={`pb-2 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === "packages"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-text-muted hover:text-text-main"
+              }`}
+            >
+              Skill Packages
+            </button>
+          </div>
+          {activeTab === "packages" && (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              icon="add"
+              onClick={openAddPackageModal}
+            >
+              Create Package
+            </Button>
+          )}
+        </div>
+
+        {activeTab === "skills" && (
+          <Card padding="md">
           <input
             ref={customSkillInputRef}
             type="file"
@@ -659,6 +796,84 @@ export default function SkillsPage() {
             />
           )}
         </Card>
+        )}
+
+        {activeTab === "packages" && (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {loadingPackages && packages.length === 0 ? (
+                <div className="col-span-full flex items-center justify-center gap-2 py-8 text-sm text-text-muted">
+                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                  Loading packages...
+                </div>
+              ) : packages.length === 0 ? (
+                <p className="col-span-full py-8 text-center text-sm text-text-muted">
+                  No skill packages defined yet. Click "Create Package" to get started.
+                </p>
+              ) : packages.map((pkg) => (
+                <Card key={pkg.id} padding="md" hover className="flex flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
+                      <span className="material-symbols-outlined text-[20px]">package_2</span>
+                    </div>
+                    <Badge variant="default" size="sm">
+                      {pkg.skills?.length || 0} skills
+                    </Badge>
+                  </div>
+                  <h3 className="mt-4 font-semibold text-text-main">{pkg.name}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-6 text-text-muted">
+                    {pkg.description || "No description provided."}
+                  </p>
+                  
+                  {pkg.skills?.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {pkg.skills.slice(0, 5).map((skillId) => (
+                        <span key={skillId} className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-text-muted border border-border">
+                          {skillId}
+                        </span>
+                      ))}
+                      {pkg.skills.length > 5 && (
+                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-text-muted border border-border">
+                          +{pkg.skills.length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-5 flex gap-2 border-t border-border pt-4">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      icon="edit"
+                      onClick={() => openEditPackageModal(pkg)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon="delete"
+                      onClick={() => setDeletingPackageId(pkg.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <ConfirmModal
+              isOpen={deletingPackageId !== null}
+              onClose={() => setDeletingPackageId(null)}
+              onConfirm={() => handleDeletePackage(deletingPackageId)}
+              title="Delete Skill Package"
+              message="Are you sure you want to delete this package? Keys linked to this package will default to downloading all skills."
+              confirmText="Delete"
+            />
+          </div>
+        )}
       </section>
 
       <Card padding="md" className="flex flex-wrap items-center justify-between gap-4">
@@ -957,6 +1172,76 @@ export default function SkillsPage() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Create/Edit Package Modal */}
+      <Modal
+        isOpen={showPackageModal}
+        onClose={() => setShowPackageModal(false)}
+        title={editingPackage ? "Edit Skill Package" : "Create Skill Package"}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowPackageModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              icon="save"
+              disabled={!packageName.trim() || savingPackage}
+              onClick={handleSavePackage}
+            >
+              {savingPackage ? "Saving..." : "Save"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <Input
+            label="Package Name"
+            value={packageName}
+            onChange={(e) => setPackageName(e.target.value)}
+            placeholder="e.g. Frontend Core, Marketing Pack"
+          />
+          <Input
+            label="Description"
+            value={packageDesc}
+            onChange={(e) => setPackageDesc(e.target.value)}
+            placeholder="Describe the target workflow or team for this package"
+          />
+          
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-semibold text-text-main">Select Skills</span>
+            <div className="max-h-[220px] overflow-y-auto rounded-lg border border-border p-3 space-y-2">
+              {skills.map((skill) => {
+                const isChecked = packageSkills.includes(skill.id);
+                return (
+                  <label key={skill.id} className="flex items-start gap-3 text-sm cursor-pointer select-none py-1 hover:bg-surface-2 rounded px-2">
+                    <input
+                      type="checkbox"
+                      className="mt-1 rounded border-border text-brand-500 focus:ring-brand-500"
+                      checked={isChecked}
+                      onChange={() => {
+                        setPackageSkills((current) =>
+                          isChecked
+                            ? current.filter((id) => id !== skill.id)
+                            : [...current, skill.id]
+                        );
+                      }}
+                    />
+                    <div>
+                      <p className="font-medium text-text-main">{skill.name}</p>
+                      <p className="text-xs text-text-muted">{skill.id} - {skill.description}</p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {packageError && (
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">{packageError}</p>
+          )}
+        </div>
       </Modal>
     </div>
   );

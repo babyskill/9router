@@ -26,6 +26,7 @@ export async function PUT(request, { params }) {
       name,
       allow9Router,
       allowSkills,
+      skillPackageId,
       quotaLimitUsd,
       quotaLimitTokens,
       quotaUsageUsd,
@@ -43,6 +44,7 @@ export async function PUT(request, { params }) {
     if (name !== undefined) updateData.name = name;
     if (allow9Router !== undefined) updateData.allow9Router = allow9Router;
     if (allowSkills !== undefined) updateData.allowSkills = allowSkills;
+    if (skillPackageId !== undefined) updateData.skillPackageId = skillPackageId;
     if (quotaLimitUsd !== undefined) updateData.quotaLimitUsd = quotaLimitUsd;
     if (quotaLimitTokens !== undefined) updateData.quotaLimitTokens = quotaLimitTokens;
     if (quotaUsageUsd !== undefined) updateData.quotaUsageUsd = quotaUsageUsd;

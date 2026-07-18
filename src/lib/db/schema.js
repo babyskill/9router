@@ -3,7 +3,7 @@
 // pre-change safety backup in migrate.js: when the stored version is lower,
 // one lightweight DB backup is taken before applying schema changes. Forgetting
 // to bump only skips that backup — it does NOT break the additive auto-sync.
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const PRAGMA_SQL = `
 PRAGMA journal_mode = WAL;
@@ -84,6 +84,7 @@ export const TABLES = {
       isActive: "INTEGER DEFAULT 1",
       allow9Router: "INTEGER DEFAULT 1",
       allowSkills: "INTEGER DEFAULT 1",
+      skillPackageId: "TEXT DEFAULT NULL",
       quotaLimitUsd: "REAL DEFAULT NULL",
       quotaUsageUsd: "REAL DEFAULT 0",
       quotaLimitTokens: "INTEGER DEFAULT NULL",
@@ -91,6 +92,17 @@ export const TABLES = {
       createdAt: "TEXT NOT NULL",
     },
     indexes: ["CREATE INDEX IF NOT EXISTS idx_ak_key ON apiKeys(key)"],
+  },
+  skillPackages: {
+    columns: {
+      id: "TEXT PRIMARY KEY",
+      name: "TEXT UNIQUE NOT NULL",
+      description: "TEXT",
+      skills: "TEXT NOT NULL", // JSON string of skill ids array: '["aso-audit", ...]'
+      createdAt: "TEXT NOT NULL",
+      updatedAt: "TEXT NOT NULL",
+    },
+    indexes: ["CREATE INDEX IF NOT EXISTS idx_sp_name ON skillPackages(name)"],
   },
   combos: {
     columns: {

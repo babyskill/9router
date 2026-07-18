@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import AdmZip from "adm-zip";
 import { DATA_DIR } from "@/lib/dataDir";
 
 export const BUILT_IN_ICONS = {
@@ -196,4 +197,78 @@ export function copyBuiltInSkillToCustom(skillId) {
   fs.mkdirSync(customSkillsDirectory, { recursive: true });
   fs.cpSync(builtInDirectory, customDirectory, { recursive: true });
   return customDirectory;
+}
+
+export function listWorkflowsFromZip() {
+  const zipPath = path.join(DATA_DIR, "storage", "awkit", "workflows.zip");
+  if (!fs.existsSync(zipPath)) return [];
+
+  try {
+    const zip = new AdmZip(zipPath);
+    const zipEntries = zip.getEntries();
+    const workflows = [];
+
+    for (const entry of zipEntries) {
+      if (entry.isDirectory) continue;
+      if (!entry.entryName.endsWith(".md")) continue;
+      if (!entry.entryName.startsWith("workflows/")) continue;
+
+      let id = entry.entryName.slice("workflows/".length);
+      if (id.endsWith(".md")) {
+        id = id.slice(0, -3);
+      }
+
+      const contents = entry.getData().toString("utf8");
+      
+      // Parse metadata
+      let name = id.split("/").pop(); // default to filename
+      name = name.split(/[-_]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      let description = "No description provided.";
+
+      // Check frontmatter first
+      const frontmatterMatch = contents.match(/^---\s*\r?\n([\s\S]*?)\r?\n---(?:\s*\r?\n|$)/);
+      if (frontmatterMatch) {
+        const fm = frontmatterMatch[1];
+        const matchName = fm.match(/^name\s*:\s*(.*)$/m);
+        const matchDesc = fm.match(/^description\s*:\s*(.*)$/m);
+        if (matchName) name = matchName[1].trim().replace(/^(["'])(.*)\1$/, "$2");
+        if (matchDesc) description = matchDesc[1].trim().replace(/^(["'])(.*)\1$/, "$2");
+      } else {
+        // Fallback to H1 and first paragraph
+        const lines = contents.split("\n");
+        for (const line of lines) {
+          if (line.trim().startsWith("# ")) {
+            name = line.trim().slice(2).trim();
+            break;
+          }
+        }
+        let foundH1 = false;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("# ")) {
+            foundH1 = true;
+            continue;
+          }
+          if (foundH1 && trimmed && !trimmed.startsWith("#") && !trimmed.startsWith("-") && !trimmed.startsWith(">")) {
+            description = trimmed;
+            if (description.length > 150) {
+              description = description.slice(0, 150) + "...";
+            }
+            break;
+          }
+        }
+      }
+
+      workflows.push({
+        id,
+        name,
+        description,
+      });
+    }
+
+    return workflows.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Failed to list workflows from zip:", error);
+    return [];
+  }
 }

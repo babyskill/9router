@@ -148,6 +148,60 @@ export async function GET(request) {
           zipBuffer = zip.toBuffer();
         }
       }
+    } else if (pkg === "workflows") {
+      const systemWorkflowsZipPath = path.join(DATA_DIR, "storage", "awkit", "workflows.zip");
+
+      if (skillPackage) {
+        const selectedWorkflowIds = skillPackage.workflows || [];
+        if (selectedWorkflowIds.length === 0) {
+          return NextResponse.json(
+            { error: "No workflows configured in the assigned package" },
+            { status: 400 }
+          );
+        }
+
+        if (!fs.existsSync(systemWorkflowsZipPath)) {
+          return NextResponse.json(
+            { error: "System workflows bundle not found on the server" },
+            { status: 404 }
+          );
+        }
+
+        const zip = new AdmZip();
+        const sourceZip = new AdmZip(systemWorkflowsZipPath);
+        const sourceEntries = sourceZip.getEntries();
+        let addedCount = 0;
+
+        for (const entry of sourceEntries) {
+          if (entry.isDirectory) continue;
+          if (!entry.entryName.startsWith("workflows/")) continue;
+          if (!entry.entryName.endsWith(".md")) continue;
+
+          let id = entry.entryName.slice("workflows/".length);
+          if (id.endsWith(".md")) {
+            id = id.slice(0, -3);
+          }
+
+          if (selectedWorkflowIds.includes(id)) {
+            zip.addFile(entry.entryName, entry.getData());
+            addedCount++;
+          }
+        }
+
+        if (addedCount === 0) {
+          return NextResponse.json(
+            { error: "No valid workflows from the package found on the server" },
+            { status: 404 }
+          );
+        }
+
+        zipBuffer = zip.toBuffer();
+      } else {
+        // Default behavior: return the entire system-wide workflows.zip
+        if (fs.existsSync(systemWorkflowsZipPath)) {
+          zipBuffer = fs.readFileSync(systemWorkflowsZipPath);
+        }
+      }
     } else if (!groupPackages.includes(pkg) && skillDirExists(projectRoot, sanitizedPkg)) {
       const skillDir = resolveSkillDirectory(sanitizedPkg)?.directory;
       if (skillDir) {

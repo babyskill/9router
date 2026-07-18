@@ -9,6 +9,7 @@ function rowToPackage(row) {
     name: row.name,
     description: row.description,
     skills: parseJson(row.skills, []),
+    workflows: parseJson(row.workflows, []),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -40,12 +41,21 @@ export async function createSkillPackage(data) {
     name: data.name,
     description: data.description || null,
     skills: data.skills || [],
+    workflows: data.workflows || [],
     createdAt: now,
     updatedAt: now,
   };
   db.run(
-    `INSERT INTO skillPackages(id, name, description, skills, createdAt, updatedAt) VALUES(?, ?, ?, ?, ?, ?)`,
-    [pkg.id, pkg.name, pkg.description, stringifyJson(pkg.skills), pkg.createdAt, pkg.updatedAt]
+    `INSERT INTO skillPackages(id, name, description, skills, workflows, createdAt, updatedAt) VALUES(?, ?, ?, ?, ?, ?, ?)`,
+    [
+      pkg.id,
+      pkg.name,
+      pkg.description,
+      stringifyJson(pkg.skills),
+      stringifyJson(pkg.workflows),
+      pkg.createdAt,
+      pkg.updatedAt,
+    ]
   );
   return pkg;
 }
@@ -58,8 +68,15 @@ export async function updateSkillPackage(id, data) {
     if (!row) return;
     const merged = { ...rowToPackage(row), ...data, updatedAt: new Date().toISOString() };
     db.run(
-      `UPDATE skillPackages SET name = ?, description = ?, skills = ?, updatedAt = ? WHERE id = ?`,
-      [merged.name, merged.description, stringifyJson(merged.skills || []), merged.updatedAt, id]
+      `UPDATE skillPackages SET name = ?, description = ?, skills = ?, workflows = ?, updatedAt = ? WHERE id = ?`,
+      [
+        merged.name,
+        merged.description,
+        stringifyJson(merged.skills || []),
+        stringifyJson(merged.workflows || []),
+        merged.updatedAt,
+        id,
+      ]
     );
     result = merged;
   });

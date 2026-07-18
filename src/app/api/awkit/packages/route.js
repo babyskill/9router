@@ -26,6 +26,7 @@ export async function POST(request) {
       name: data.name.trim(),
       description: data.description || "",
       skills: data.skills || [],
+      workflows: data.workflows || [],
     });
     return NextResponse.json(pkg);
   } catch (e) {
@@ -48,6 +49,7 @@ export async function PUT(request) {
       name: data.name?.trim(),
       description: data.description,
       skills: data.skills,
+      workflows: data.workflows,
     });
     if (!updated) {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });

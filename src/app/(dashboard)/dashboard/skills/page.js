@@ -107,6 +107,10 @@ export default function SkillsPage() {
   const [packageDesc, setPackageDesc] = useState("");
   const [packageSkills, setPackageSkills] = useState([]);
   const [packageSkillsSearch, setPackageSkillsSearch] = useState("");
+  const [workflows, setWorkflows] = useState([]);
+  const [loadingWorkflows, setLoadingWorkflows] = useState(false);
+  const [packageWorkflows, setPackageWorkflows] = useState([]);
+  const [packageWorkflowsSearch, setPackageWorkflowsSearch] = useState("");
   const [savingPackage, setSavingPackage] = useState(false);
   const [packageError, setPackageError] = useState(null);
   const [deletingPackageId, setDeletingPackageId] = useState(null);
@@ -172,6 +176,21 @@ export default function SkillsPage() {
     }
   }, []);
 
+  const fetchWorkflows = useCallback(async () => {
+    setLoadingWorkflows(true);
+    try {
+      const res = await fetch("/api/awkit/workflows");
+      if (res.ok) {
+        const data = await res.json();
+        setWorkflows(data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching workflows:", err);
+    } finally {
+      setLoadingWorkflows(false);
+    }
+  }, []);
+
   const fetchPackageStatuses = useCallback(async () => {
     try {
       const response = await fetch("/api/awkit/status", { cache: "no-store" });
@@ -210,6 +229,7 @@ export default function SkillsPage() {
       name: packageName.trim(),
       description: packageDesc,
       skills: packageSkills,
+      workflows: packageWorkflows,
     };
 
     try {
@@ -238,6 +258,8 @@ export default function SkillsPage() {
       setPackageDesc("");
       setPackageSkills([]);
       setPackageSkillsSearch("");
+      setPackageWorkflows([]);
+      setPackageWorkflowsSearch("");
     } catch (e) {
       setPackageError(e.message);
     } finally {
@@ -269,6 +291,8 @@ export default function SkillsPage() {
     setPackageDesc("");
     setPackageSkills([]);
     setPackageSkillsSearch("");
+    setPackageWorkflows([]);
+    setPackageWorkflowsSearch("");
     setPackageError(null);
     setShowPackageModal(true);
   };
@@ -279,6 +303,8 @@ export default function SkillsPage() {
     setPackageDesc(pkg.description || "");
     setPackageSkills(pkg.skills || []);
     setPackageSkillsSearch("");
+    setPackageWorkflows(pkg.workflows || []);
+    setPackageWorkflowsSearch("");
     setPackageError(null);
     setShowPackageModal(true);
   };
@@ -287,7 +313,8 @@ export default function SkillsPage() {
     fetchPackageStatuses();
     fetchSkills();
     fetchPackages();
-  }, [fetchPackageStatuses, fetchSkills, fetchPackages]);
+    fetchWorkflows();
+  }, [fetchPackageStatuses, fetchSkills, fetchPackages, fetchWorkflows]);
 
   const handleCustomSkillUpload = async (file) => {
     if (!file) return;
@@ -820,9 +847,14 @@ export default function SkillsPage() {
                     <div className="flex size-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
                       <span className="material-symbols-outlined text-[20px]">package_2</span>
                     </div>
-                    <Badge variant="default" size="sm">
-                      {pkg.skills?.length || 0} skills
-                    </Badge>
+                    <div className="flex flex-col gap-1 items-end">
+                      <Badge variant="default" size="sm">
+                        {pkg.skills?.length || 0} skills
+                      </Badge>
+                      <Badge variant="success" size="sm">
+                        {pkg.workflows?.length || 0} workflows
+                      </Badge>
+                    </div>
                   </div>
                   <h3 className="mt-4 font-semibold text-text-main">{pkg.name}</h3>
                   <p className="mt-2 flex-1 text-sm leading-6 text-text-muted">
@@ -839,6 +871,21 @@ export default function SkillsPage() {
                       {pkg.skills.length > 5 && (
                         <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-text-muted border border-border">
                           +{pkg.skills.length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {pkg.workflows?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {pkg.workflows.slice(0, 5).map((wfId) => (
+                        <span key={wfId} className="rounded bg-brand-500/5 text-brand-600 dark:text-brand-400 px-1.5 py-0.5 text-[10px] border border-brand-500/10">
+                          {wfId.split("/").pop()}
+                        </span>
+                      ))}
+                      {pkg.workflows.length > 5 && (
+                        <span className="rounded bg-brand-500/5 text-brand-600 dark:text-brand-400 px-1.5 py-0.5 text-[10px] border border-brand-500/10">
+                          +{pkg.workflows.length - 5} more
                         </span>
                       )}
                     </div>
@@ -1295,6 +1342,92 @@ export default function SkillsPage() {
               ).length === 0 && (
                 <p className="col-span-full py-4 text-center text-xs text-text-muted">
                   No skills matched your search.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <Input
+            label="Search Workflows"
+            value={packageWorkflowsSearch}
+            onChange={(e) => setPackageWorkflowsSearch(e.target.value)}
+            placeholder="Search workflows by ID or Name..."
+          />
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-text-main">Select Workflows</span>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setPackageWorkflows(workflows.map((w) => w.id))}
+                  className="rounded px-2 py-1 text-xs font-semibold text-primary hover:bg-surface-2 transition-all"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPackageWorkflows([])}
+                  className="rounded px-2 py-1 text-xs font-semibold text-text-muted hover:bg-surface-2 transition-all"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-[300px] overflow-y-auto rounded-lg border border-border p-3">
+              {workflows
+                .filter(
+                  (w) =>
+                    (w.id || "").toLowerCase().includes(packageWorkflowsSearch.toLowerCase()) ||
+                    (w.name || "").toLowerCase().includes(packageWorkflowsSearch.toLowerCase())
+                )
+                .map((wf) => {
+                  const isChecked = packageWorkflows.includes(wf.id);
+                  return (
+                    <label
+                      key={wf.id}
+                      className={`flex items-start gap-2 text-sm cursor-pointer select-none p-2 rounded-lg border transition-all duration-150 ${
+                        isChecked
+                          ? "border-brand-500/40 bg-brand-500/5"
+                          : "border-border hover:bg-surface-2"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 rounded border-border text-brand-500 focus:ring-brand-500 size-3.5 shrink-0"
+                        checked={isChecked}
+                        onChange={() => {
+                          setPackageWorkflows((current) =>
+                            isChecked
+                              ? current.filter((id) => id !== wf.id)
+                              : [...current, wf.id]
+                          );
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="font-semibold text-text-main text-xs truncate"
+                          title={wf.name}
+                        >
+                          {wf.name}
+                        </p>
+                        <p
+                          className="text-[10px] text-text-muted truncate mt-0.5"
+                          title={wf.id}
+                        >
+                          {wf.id}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              {workflows.filter(
+                (w) =>
+                  (w.id || "").toLowerCase().includes(packageWorkflowsSearch.toLowerCase()) ||
+                  (w.name || "").toLowerCase().includes(packageWorkflowsSearch.toLowerCase())
+              ).length === 0 && (
+                <p className="col-span-full py-4 text-center text-xs text-text-muted">
+                  No workflows matched your search.
                 </p>
               )}
             </div>

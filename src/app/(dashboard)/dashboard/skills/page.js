@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Card, Pagination } from "@/shared/components";
+import { Badge, Button, Card, ConfirmModal, Drawer, Modal, Pagination } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { SKILLS_REPO_URL } from "@/shared/constants/skills";
 
@@ -99,6 +99,16 @@ export default function SkillsPage() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
+  const [editorSkill, setEditorSkill] = useState(null);
+  const [skillFiles, setSkillFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileContent, setFileContent] = useState("");
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [loadingFileContent, setLoadingFileContent] = useState(false);
+  const [savingFile, setSavingFile] = useState(false);
+  const [editorMessage, setEditorMessage] = useState(null);
+  const [fileToDelete, setFileToDelete] = useState(null);
+  const [bundleImport, setBundleImport] = useState(null);
 
   // Auto-adjust page if current page becomes empty due to item deletion or size changes
   useEffect(() => {
@@ -227,6 +237,143 @@ export default function SkillsPage() {
     }
   };
 
+  const loadSkillFile = async (skillId, filePath) => {
+    setSelectedFile(filePath);
+    setLoadingFileContent(true);
+    setEditorMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/awkit/custom-skills/file-content?id=${encodeURIComponent(skillId)}&path=${encodeURIComponent(filePath)}`,
+        { cache: "no-store" }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load file");
+      setFileContent(data.content ?? "");
+    } catch (error) {
+      setFileContent("");
+      setEditorMessage({ type: "error", text: error.message });
+    } finally {
+      setLoadingFileContent(false);
+    }
+  };
+
+  const openSkillEditor = async (skill) => {
+    setEditorSkill(skill);
+    setSkillFiles([]);
+    setSelectedFile(null);
+    setFileContent("");
+    setEditorMessage(null);
+    setLoadingFiles(true);
+
+    try {
+      const response = await fetch(
+        `/api/awkit/custom-skills/files?id=${encodeURIComponent(skill.id)}`,
+        { cache: "no-store" }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load skill files");
+      const files = Array.isArray(data) ? data : data.files || [];
+      setSkillFiles(files);
+      const defaultFile = files.includes("SKILL.md") ? "SKILL.md" : files[0];
+      if (defaultFile) await loadSkillFile(skill.id, defaultFile);
+    } catch (error) {
+      setEditorMessage({ type: "error", text: error.message });
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
+
+  const handleAddSkillFile = async () => {
+    if (!editorSkill || editorSkill.isBuiltIn) return;
+    const filePath = window.prompt("Enter a relative file path (for example: references/example.md)");
+    if (!filePath) return;
+
+    setEditorMessage(null);
+    try {
+      const response = await fetch("/api/awkit/custom-skills/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editorSkill.id, path: filePath }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to create file");
+      setSkillFiles((current) => [...new Set([...current, filePath])].sort());
+      await loadSkillFile(editorSkill.id, filePath);
+    } catch (error) {
+      setEditorMessage({ type: "error", text: error.message });
+    }
+  };
+
+  const handleDeleteSkillFile = async () => {
+    if (!editorSkill || !fileToDelete) return;
+    setEditorMessage(null);
+    try {
+      const response = await fetch(
+        `/api/awkit/custom-skills/files?id=${encodeURIComponent(editorSkill.id)}&path=${encodeURIComponent(fileToDelete)}`,
+        { method: "DELETE" }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to delete file");
+      const remainingFiles = skillFiles.filter((filePath) => filePath !== fileToDelete);
+      setSkillFiles(remainingFiles);
+      if (selectedFile === fileToDelete) {
+        const nextFile = remainingFiles.includes("SKILL.md") ? "SKILL.md" : remainingFiles[0];
+        if (nextFile) await loadSkillFile(editorSkill.id, nextFile);
+        else {
+          setSelectedFile(null);
+          setFileContent("");
+        }
+      }
+    } catch (error) {
+      setEditorMessage({ type: "error", text: error.message });
+    } finally {
+      setFileToDelete(null);
+    }
+  };
+
+  const handleSaveSkillFile = async () => {
+    if (!editorSkill || !selectedFile || editorSkill.isBuiltIn) return;
+    setSavingFile(true);
+    setEditorMessage(null);
+    try {
+      const response = await fetch("/api/awkit/custom-skills/file-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editorSkill.id, path: selectedFile, content: fileContent }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to save file");
+      setEditorMessage({ type: "success", text: "Changes saved." });
+      if (selectedFile === "SKILL.md") await fetchSkills();
+    } catch (error) {
+      setEditorMessage({ type: "error", text: error.message });
+    } finally {
+      setSavingFile(false);
+    }
+  };
+
+  const handleExtractBundle = async () => {
+    if (!bundleImport?.selectedSkills.length) return;
+    setBundleImport((current) => ({ ...current, step: 2, status: "loading", error: null }));
+    try {
+      const response = await fetch("/api/awkit/custom-skills/extract-bundle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tempFileId: bundleImport.tempFileId,
+          selectedSkills: bundleImport.selectedSkills,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to import bundle");
+      await fetchSkills();
+      setBundleImport((current) => ({ ...current, status: "success", result: data }));
+    } catch (error) {
+      setBundleImport((current) => ({ ...current, status: "error", error: error.message }));
+    }
+  };
+
   const handlePackageUpload = async (packageId, file) => {
     if (!file) return;
 
@@ -240,8 +387,28 @@ export default function SkillsPage() {
 
     try {
       const formData = new FormData();
-      formData.append("package", packageId);
       formData.append("file", file);
+
+      if (packageId === "skills") {
+        const response = await fetch("/api/awkit/custom-skills/upload-bundle", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unable to inspect skill bundle");
+        const bundleSkills = data.skills || [];
+        setBundleImport({
+          tempFileId: data.tempFileId,
+          skills: bundleSkills,
+          selectedSkills: bundleSkills.map((skill) => skill.id),
+          step: 1,
+          status: "idle",
+          error: null,
+        });
+        return;
+      }
+
+      formData.append("package", packageId);
 
       const response = await fetch("/api/awkit/upload", {
         method: "POST",
@@ -448,18 +615,28 @@ export default function SkillsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold text-text-main">{skill.name}</p>
-                      {!skill.isBuiltIn && (
+                      <div className="flex shrink-0 items-center gap-1">
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          icon="delete"
-                          loading={deletingSkillId === skill.id}
-                          disabled={deletingSkillId === skill.id}
-                          onClick={() => handleDeleteSkill(skill.id)}
-                          title={`Delete ${skill.name}`}
+                          icon={skill.isBuiltIn ? "visibility" : "edit"}
+                          onClick={() => openSkillEditor(skill)}
+                          title={skill.isBuiltIn ? `View ${skill.name}` : `Edit ${skill.name}`}
                         />
-                      )}
+                        {!skill.isBuiltIn && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            icon="delete"
+                            loading={deletingSkillId === skill.id}
+                            disabled={deletingSkillId === skill.id}
+                            onClick={() => handleDeleteSkill(skill.id)}
+                            title={`Delete ${skill.name}`}
+                          />
+                        )}
+                      </div>
                     </div>
                     <p className="mt-0.5 text-xs leading-5 text-text-muted">{skill.description}</p>
                     <Badge variant={skill.isBuiltIn ? "primary" : "default"} size="sm" className="mt-2">
@@ -499,6 +676,288 @@ export default function SkillsPage() {
           <span className="material-symbols-outlined text-[17px]">open_in_new</span>
         </a>
       </Card>
+
+      <Drawer
+        isOpen={Boolean(editorSkill)}
+        onClose={() => setEditorSkill(null)}
+        title={editorSkill ? `${editorSkill.isBuiltIn ? "View" : "Edit"} ${editorSkill.name}` : ""}
+        width="xl"
+      >
+        {editorSkill && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Badge variant={editorSkill.isBuiltIn ? "primary" : "default"} size="sm">
+                {editorSkill.isBuiltIn ? "Built-in (read-only)" : "Custom"}
+              </Badge>
+              <span className="text-xs text-text-muted">{editorSkill.id}</span>
+            </div>
+
+            {editorMessage && (
+              <p
+                className={`text-sm font-medium ${
+                  editorMessage.type === "success"
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {editorMessage.text}
+              </p>
+            )}
+
+            <div className="flex gap-4">
+              <div className="w-1/3 shrink-0">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Files</p>
+                  {!editorSkill.isBuiltIn && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon="add"
+                      onClick={handleAddSkillFile}
+                      title="Add file"
+                    />
+                  )}
+                </div>
+                {loadingFiles ? (
+                  <div className="flex items-center gap-2 py-4 text-sm text-text-muted">
+                    <span className="material-symbols-outlined animate-spin text-[17px]">progress_activity</span>
+                    Loading files...
+                  </div>
+                ) : skillFiles.length === 0 ? (
+                  <p className="py-4 text-sm text-text-muted">No files found.</p>
+                ) : (
+                  <ul className="space-y-1">
+                    {skillFiles.map((filePath) => (
+                      <li key={filePath} className="group flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => loadSkillFile(editorSkill.id, filePath)}
+                          className={`min-w-0 flex-1 truncate rounded-[8px] px-2.5 py-1.5 text-left text-xs font-medium transition-all duration-150 ${
+                            selectedFile === filePath
+                              ? "bg-brand-500/10 text-primary"
+                              : "text-text-main hover:bg-surface-2"
+                          }`}
+                          title={filePath}
+                        >
+                          {filePath}
+                        </button>
+                        {!editorSkill.isBuiltIn && filePath !== "SKILL.md" && (
+                          <button
+                            type="button"
+                            onClick={() => setFileToDelete(filePath)}
+                            className="shrink-0 rounded-[6px] p-1 text-text-muted opacity-0 transition-all duration-150 hover:bg-surface-2 hover:text-red-500 group-hover:opacity-100"
+                            title={`Delete ${filePath}`}
+                          >
+                            <span className="material-symbols-outlined text-[15px]">delete</span>
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                {loadingFileContent ? (
+                  <div className="flex h-[450px] items-center justify-center gap-2 rounded-[10px] border border-border text-sm text-text-muted">
+                    <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    Loading content...
+                  </div>
+                ) : selectedFile ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={fileContent}
+                      onChange={(event) => setFileContent(event.target.value)}
+                      readOnly={editorSkill.isBuiltIn}
+                      spellCheck={false}
+                      className={`h-[450px] w-full resize-y rounded-[10px] border border-border bg-surface-2 p-3 font-mono text-sm text-text-main outline-none transition-all duration-150 focus:border-brand-500/40 ${
+                        editorSkill.isBuiltIn ? "cursor-default opacity-80" : ""
+                      }`}
+                    />
+                    {!editorSkill.isBuiltIn && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          icon="save"
+                          loading={savingFile}
+                          disabled={savingFile}
+                          onClick={handleSaveSkillFile}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex h-[450px] items-center justify-center rounded-[10px] border border-border text-sm text-text-muted">
+                    Select a file to view its content.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Drawer>
+
+      <ConfirmModal
+        isOpen={Boolean(fileToDelete)}
+        onClose={() => setFileToDelete(null)}
+        onConfirm={handleDeleteSkillFile}
+        title="Delete file"
+        message={`Delete "${fileToDelete}" from ${editorSkill?.name || "this skill"}? This cannot be undone.`}
+        confirmText="Delete"
+      />
+
+      <Modal
+        isOpen={Boolean(bundleImport)}
+        onClose={() => {
+          if (bundleImport?.status !== "loading") setBundleImport(null);
+        }}
+        title="Import Skill Bundle"
+        size="lg"
+        footer={
+          bundleImport?.step === 1 ? (
+            <>
+              <Button variant="ghost" onClick={() => setBundleImport(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                icon="unarchive"
+                disabled={bundleImport.selectedSkills.length === 0}
+                onClick={handleExtractBundle}
+              >
+                Import Selected ({bundleImport.selectedSkills.length})
+              </Button>
+            </>
+          ) : bundleImport?.status === "loading" ? null : (
+            <Button variant="primary" onClick={() => setBundleImport(null)}>
+              Close
+            </Button>
+          )
+        }
+      >
+        {bundleImport?.step === 1 && (
+          <div className="space-y-3">
+            <p className="text-sm text-text-muted">
+              Choose the skills to extract from the bundle. Conflicting skills will be overwritten.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setBundleImport((current) => ({
+                    ...current,
+                    selectedSkills: current.skills.map((skill) => skill.id),
+                  }))
+                }
+              >
+                Select All
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setBundleImport((current) => ({ ...current, selectedSkills: [] }))}
+              >
+                Clear All
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setBundleImport((current) => ({
+                    ...current,
+                    selectedSkills: current.skills
+                      .filter((skill) => !skill.exists)
+                      .map((skill) => skill.id),
+                  }))
+                }
+              >
+                Keep Existing
+              </Button>
+            </div>
+            <div className="max-h-[320px] space-y-1.5 overflow-y-auto pr-1">
+              {bundleImport.skills.length === 0 ? (
+                <p className="py-4 text-center text-sm text-text-muted">
+                  No skills were found in this bundle.
+                </p>
+              ) : (
+                bundleImport.skills.map((skill) => {
+                  const isChecked = bundleImport.selectedSkills.includes(skill.id);
+
+                  return (
+                    <label
+                      key={skill.id}
+                      className={`flex cursor-pointer items-center gap-3 rounded-[10px] border p-2.5 transition-all duration-150 ${
+                        isChecked
+                          ? "border-brand-500/40 bg-brand-500/5"
+                          : "border-border hover:border-brand-500/25 hover:bg-surface-2"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() =>
+                          setBundleImport((current) => ({
+                            ...current,
+                            selectedSkills: current.selectedSkills.includes(skill.id)
+                              ? current.selectedSkills.filter((id) => id !== skill.id)
+                              : [...current.selectedSkills, skill.id],
+                          }))
+                        }
+                        className="size-4 shrink-0 accent-primary"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-main">
+                        {skill.name || skill.id}
+                      </span>
+                      {skill.exists ? (
+                        <span className="shrink-0 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-semibold text-yellow-600 dark:text-yellow-400">
+                          Conflict
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full bg-green-500/15 px-2 py-0.5 text-[11px] font-semibold text-green-600 dark:text-green-400">
+                          New
+                        </span>
+                      )}
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+        {bundleImport?.step === 2 && (
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            {bundleImport.status === "loading" && (
+              <>
+                <span className="material-symbols-outlined animate-spin text-[28px] text-primary">progress_activity</span>
+                <p className="text-sm text-text-muted">Extracting selected skills...</p>
+              </>
+            )}
+            {bundleImport.status === "success" && (
+              <>
+                <span className="material-symbols-outlined text-[28px] text-green-600 dark:text-green-400">check_circle</span>
+                <p className="text-sm font-medium text-text-main">
+                  Imported {bundleImport.result?.extracted?.length ?? bundleImport.selectedSkills.length} skill(s) successfully.
+                </p>
+              </>
+            )}
+            {bundleImport.status === "error" && (
+              <>
+                <span className="material-symbols-outlined text-[28px] text-red-600 dark:text-red-400">error</span>
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">{bundleImport.error}</p>
+              </>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

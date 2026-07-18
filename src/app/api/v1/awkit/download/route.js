@@ -4,7 +4,11 @@ import fs from "fs";
 import path from "path";
 import { DATA_DIR } from "@/lib/dataDir";
 import { getApiKeyByKey, getSkillPackageById } from "@/lib/localDb";
-import { resolveSkillDirectory } from "@/lib/customSkills";
+import {
+  resolveSkillDirectory,
+  builtInSkillsDirectory,
+  customSkillsDirectory,
+} from "@/lib/customSkills";
 
 const sanitizeSkillId = (skillId) =>
   (skillId || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -116,11 +120,31 @@ export async function GET(request) {
         }
         zipBuffer = zip.toBuffer();
       } else {
-        // Default behavior: zip the entire built-in skills directory
-        const skillsDir = path.join(projectRoot, "skills");
-        if (fs.existsSync(skillsDir)) {
-          const zip = new AdmZip();
-          zip.addLocalFolder(skillsDir, "skills");
+        // Default behavior: zip all skills (both built-in and custom)
+        const zip = new AdmZip();
+        let addedAny = false;
+
+        if (fs.existsSync(builtInSkillsDirectory)) {
+          const entries = fs.readdirSync(builtInSkillsDirectory, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isDirectory()) {
+              zip.addLocalFolder(path.join(builtInSkillsDirectory, entry.name), `skills/${entry.name}`);
+              addedAny = true;
+            }
+          }
+        }
+
+        if (fs.existsSync(customSkillsDirectory)) {
+          const entries = fs.readdirSync(customSkillsDirectory, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isDirectory()) {
+              zip.addLocalFolder(path.join(customSkillsDirectory, entry.name), `skills/${entry.name}`);
+              addedAny = true;
+            }
+          }
+        }
+
+        if (addedAny) {
           zipBuffer = zip.toBuffer();
         }
       }

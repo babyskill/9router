@@ -79,33 +79,45 @@ export async function POST(request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    const tempFileId = crypto.randomUUID();
+    
+    // Save to temp folder first so we can analyze the uploaded payload if parsing fails
+    fs.mkdirSync(bundleTempDirectory, { recursive: true });
+    const tempFilePath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}.zip`);
+    fs.writeFileSync(tempFilePath, buffer);
+
     let zip;
+    let skills = [];
 
     try {
-      zip = new AdmZip(buffer);
-    } catch {
-      return NextResponse.json({ error: "Invalid ZIP file" }, { status: 400 });
-    }
+      zip = new AdmZip(tempFilePath); // Use file path instead of buffer, sometimes adm-zip handles file paths better
+      
+      // Force lazy parse
+      zip.getEntries();
 
-    if (zipContainsTraversal(zip)) {
-      return NextResponse.json({ error: "Invalid ZIP entry path" }, { status: 400 });
-    }
+      if (zipContainsTraversal(zip)) {
+        // Clean up on error
+        try { fs.unlinkSync(tempFilePath); } catch {}
+        return NextResponse.json({ error: "Invalid ZIP entry path" }, { status: 400 });
+      }
 
-    const skills = findBundleSkills(zip);
+      skills = findBundleSkills(zip);
+    } catch (zipError) {
+      console.error("Failed to parse ZIP archive with adm-zip:", zipError);
+      return NextResponse.json({
+        error: `Invalid ZIP file structure: ${zipError.message}`,
+        details: "The uploaded file may be corrupted, uses an unsupported format (like ZIP64), or is too large for the parser.",
+        tempFileId // Keep ID so we can inspect the file on disk
+      }, { status: 400 });
+    }
 
     if (skills.length === 0) {
+      try { fs.unlinkSync(tempFilePath); } catch {}
       return NextResponse.json(
         { error: "No skills found in bundle (missing SKILL.md files)" },
         { status: 400 }
       );
     }
-
-    const tempFileId = crypto.randomUUID();
-    fs.mkdirSync(bundleTempDirectory, { recursive: true });
-    fs.writeFileSync(
-      path.join(bundleTempDirectory, `temp-bundle-${tempFileId}.zip`),
-      buffer
-    );
 
     return NextResponse.json({
       tempFileId,

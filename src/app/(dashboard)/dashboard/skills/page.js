@@ -106,6 +106,7 @@ export default function SkillsPage() {
   const [packageName, setPackageName] = useState("");
   const [packageDesc, setPackageDesc] = useState("");
   const [packageSkills, setPackageSkills] = useState([]);
+  const [packageSkillsSearch, setPackageSkillsSearch] = useState("");
   const [savingPackage, setSavingPackage] = useState(false);
   const [packageError, setPackageError] = useState(null);
   const [deletingPackageId, setDeletingPackageId] = useState(null);
@@ -236,6 +237,7 @@ export default function SkillsPage() {
       setPackageName("");
       setPackageDesc("");
       setPackageSkills([]);
+      setPackageSkillsSearch("");
     } catch (e) {
       setPackageError(e.message);
     } finally {
@@ -266,6 +268,7 @@ export default function SkillsPage() {
     setPackageName("");
     setPackageDesc("");
     setPackageSkills([]);
+    setPackageSkillsSearch("");
     setPackageError(null);
     setShowPackageModal(true);
   };
@@ -275,6 +278,7 @@ export default function SkillsPage() {
     setPackageName(pkg.name);
     setPackageDesc(pkg.description || "");
     setPackageSkills(pkg.skills || []);
+    setPackageSkillsSearch("");
     setPackageError(null);
     setShowPackageModal(true);
   };
@@ -1179,6 +1183,7 @@ export default function SkillsPage() {
         isOpen={showPackageModal}
         onClose={() => setShowPackageModal(false)}
         title={editingPackage ? "Edit Skill Package" : "Create Skill Package"}
+        size="lg"
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowPackageModal(false)}>
@@ -1208,6 +1213,13 @@ export default function SkillsPage() {
             onChange={(e) => setPackageDesc(e.target.value)}
             placeholder="Describe the target workflow or team for this package"
           />
+
+          <Input
+            label="Search Skills"
+            value={packageSkillsSearch}
+            onChange={(e) => setPackageSkillsSearch(e.target.value)}
+            placeholder="Search skills by ID or Name..."
+          />
           
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
@@ -1229,30 +1241,62 @@ export default function SkillsPage() {
                 </button>
               </div>
             </div>
-            <div className="max-h-[220px] overflow-y-auto rounded-lg border border-border p-3 space-y-2">
-              {skills.map((skill) => {
-                const isChecked = packageSkills.includes(skill.id);
-                return (
-                  <label key={skill.id} className="flex items-start gap-3 text-sm cursor-pointer select-none py-1 hover:bg-surface-2 rounded px-2">
-                    <input
-                      type="checkbox"
-                      className="mt-1 rounded border-border text-brand-500 focus:ring-brand-500"
-                      checked={isChecked}
-                      onChange={() => {
-                        setPackageSkills((current) =>
-                          isChecked
-                            ? current.filter((id) => id !== skill.id)
-                            : [...current, skill.id]
-                        );
-                      }}
-                    />
-                    <div>
-                      <p className="font-medium text-text-main">{skill.name}</p>
-                      <p className="text-xs text-text-muted">{skill.id} - {skill.description}</p>
-                    </div>
-                  </label>
-                );
-              })}
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 max-h-[300px] overflow-y-auto rounded-lg border border-border p-3">
+              {skills
+                .filter(
+                  (s) =>
+                    (s.id || "").toLowerCase().includes(packageSkillsSearch.toLowerCase()) ||
+                    (s.name || "").toLowerCase().includes(packageSkillsSearch.toLowerCase())
+                )
+                .map((skill) => {
+                  const isChecked = packageSkills.includes(skill.id);
+                  return (
+                    <label
+                      key={skill.id}
+                      className={`flex items-start gap-2 text-sm cursor-pointer select-none p-2 rounded-lg border transition-all duration-150 ${
+                        isChecked
+                          ? "border-brand-500/40 bg-brand-500/5"
+                          : "border-border hover:bg-surface-2"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 rounded border-border text-brand-500 focus:ring-brand-500 size-3.5 shrink-0"
+                        checked={isChecked}
+                        onChange={() => {
+                          setPackageSkills((current) =>
+                            isChecked
+                              ? current.filter((id) => id !== skill.id)
+                              : [...current, skill.id]
+                          );
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="font-semibold text-text-main text-xs truncate"
+                          title={skill.name}
+                        >
+                          {skill.name}
+                        </p>
+                        <p
+                          className="text-[10px] text-text-muted truncate mt-0.5"
+                          title={skill.id}
+                        >
+                          {skill.id}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              {skills.filter(
+                (s) =>
+                  (s.id || "").toLowerCase().includes(packageSkillsSearch.toLowerCase()) ||
+                  (s.name || "").toLowerCase().includes(packageSkillsSearch.toLowerCase())
+              ).length === 0 && (
+                <p className="col-span-full py-4 text-center text-xs text-text-muted">
+                  No skills matched your search.
+                </p>
+              )}
             </div>
           </div>
 

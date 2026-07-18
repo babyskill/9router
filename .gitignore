@@ -90,3 +90,4 @@ log.txt
 tmp/
 .gitnexus/
 node_modules/
+/skills

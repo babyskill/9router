@@ -119,7 +119,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("Failed to upload skill bundle:", error);
     return NextResponse.json(
-      { error: "Failed to upload skill bundle" },
+      { error: `Failed to upload skill bundle: ${error.message}`, stack: error.stack },
       { status: 500 }
     );
   }

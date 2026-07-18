@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Button, Card } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
-import { SKILLS_REPO_URL, getSkillRawUrl } from "@/shared/constants/skills";
+import { SKILLS_REPO_URL } from "@/shared/constants/skills";
 
 const DEFAULT_PACKAGE_STATUSES = {
   core: { exists: false },
@@ -85,8 +85,6 @@ function SectionHeading({ eyebrow, title, description }) {
 }
 
 export default function SkillsPage() {
-  const entryUrl = getSkillRawUrl("9router");
-  const entryPrompt = `Read this skill and use it: ${entryUrl}`;
   const fileInputRefs = useRef({});
   const customSkillInputRef = useRef(null);
   const hasInitializedSkills = useRef(false);
@@ -249,37 +247,6 @@ export default function SkillsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 pb-8">
-      <Card
-        padding="none"
-        elev
-        className="relative overflow-hidden border-brand-500/25 bg-gradient-to-br from-surface via-surface to-brand-500/10"
-      >
-        <div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-brand-500/10 blur-3xl" />
-        <div className="relative grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge variant="primary" size="md" icon="rocket_launch">Quick Start</Badge>
-              <span className="text-xs font-medium text-text-muted">Entry Skill</span>
-            </div>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-text-main">
-              Give your agent the 9router entry point
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted">
-              Paste the instruction below into your AI client. It will load the entry skill and guide the agent to the right capability.
-            </p>
-            <div className="mt-5 flex items-center gap-3 rounded-[12px] border border-border-subtle bg-bg/80 p-3 backdrop-blur-sm">
-              <code className="min-w-0 flex-1 break-all text-xs leading-5 text-text-main">
-                {entryPrompt}
-              </code>
-              <CopyButton value={entryPrompt} label="Copy Link" size="md" />
-            </div>
-          </div>
-          <div className="hidden size-28 items-center justify-center rounded-[28px] border border-brand-500/20 bg-brand-500/10 text-primary md:flex">
-            <span className="material-symbols-outlined text-[52px]">extension</span>
-          </div>
-        </div>
-      </Card>
-
       <section className="space-y-5">
         <SectionHeading
           eyebrow="Bundles"

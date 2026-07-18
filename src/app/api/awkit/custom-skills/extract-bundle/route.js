@@ -175,6 +175,20 @@ export async function POST(request) {
       }
     }
 
+    // If we extracted a large bundle (indicating this is the main skills bundle),
+    // copy the temporary zip file to become the system-wide awkit/skills.zip bundle
+    // so the "All Skills Bundle" status correctly shows as "Available" on the dashboard.
+    if (extracted.length > 10 && fs.existsSync(tempFilePath)) {
+      const systemSkillsZipPath = path.join(bundleTempDirectory, "..", "skills.zip");
+      try {
+        fs.mkdirSync(path.dirname(systemSkillsZipPath), { recursive: true });
+        fs.copyFileSync(tempFilePath, systemSkillsZipPath);
+        console.log("Automatically promoted uploaded zip bundle to system-wide skills.zip");
+      } catch (copyErr) {
+        console.warn("Failed to automatically promote temp zip to system-wide skills.zip:", copyErr);
+      }
+    }
+
     // Clean up both temporary files and unzipped folders
     try {
       if (fs.existsSync(tempFilePath)) fs.rmSync(tempFilePath, { force: true });

@@ -1,5 +1,8 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import fs from "fs";
+import { execSync } from "child_process";
+import AdmZip from "adm-zip";
 import { NextResponse } from "next/server";
 import { DATA_DIR } from "@/lib/dataDir";
 
@@ -32,9 +35,27 @@ export async function POST(request) {
     await mkdir(storageDirectory, { recursive: true });
     await writeFile(filePath, fileBuffer);
 
+    // If uploading the skills bundle, automatically extract it to process.cwd() (project root)
+    // so that the individual skills are instantly unzipped and recognized by the dashboard.
+    if (packageName === "skills") {
+      const projectRoot = process.cwd();
+      try {
+        // Try system unzip CLI (highly optimized for large archives)
+        execSync(`unzip -q -o "${filePath}" -d "${projectRoot}"`);
+      } catch (cliError) {
+        console.warn("System unzip CLI failed during package upload, attempting adm-zip fallback:", cliError);
+        try {
+          const zip = new AdmZip(filePath);
+          zip.extractAllTo(projectRoot, true);
+        } catch (zipError) {
+          console.error("Failed to unpack skills bundle using adm-zip:", zipError);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Package ${packageName} uploaded successfully`,
+      message: `Package ${packageName} uploaded and processed successfully`,
     });
   } catch (error) {
     console.error("Failed to upload AWKit package:", error);

@@ -1210,7 +1210,25 @@ export default function SkillsPage() {
           />
           
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-text-main">Select Skills</span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-text-main">Select Skills</span>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setPackageSkills(skills.map((s) => s.id))}
+                  className="rounded px-2 py-1 text-xs font-semibold text-primary hover:bg-surface-2 transition-all"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPackageSkills([])}
+                  className="rounded px-2 py-1 text-xs font-semibold text-text-muted hover:bg-surface-2 transition-all"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
             <div className="max-h-[220px] overflow-y-auto rounded-lg border border-border p-3 space-y-2">
               {skills.map((skill) => {
                 const isChecked = packageSkills.includes(skill.id);

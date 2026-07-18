@@ -1247,7 +1247,7 @@ export default function APIPageClient({ machineId }) {
               <span>Allow Skill/AWKit downloads</span>
               <Toggle checked={newKeyAllowSkills} onChange={setNewKeyAllowSkills} />
             </label>
-            {newKeyAllowSkills && packages.length > 0 && (
+            {newKeyAllowSkills && (
               <div className="flex flex-col gap-1 text-sm mt-1 border-t border-border pt-2">
                 <span className="text-xs text-text-muted">Bound Skill Package</span>
                 <select
@@ -1358,7 +1358,7 @@ export default function APIPageClient({ machineId }) {
               <span>Allow Skill/AWKit downloads</span>
               <Toggle checked={editingKeyAllowSkills} onChange={setEditingKeyAllowSkills} />
             </label>
-            {editingKeyAllowSkills && packages.length > 0 && (
+            {editingKeyAllowSkills && (
               <div className="flex flex-col gap-1 text-sm mt-1 border-t border-border pt-2">
                 <span className="text-xs text-text-muted">Bound Skill Package</span>
                 <select

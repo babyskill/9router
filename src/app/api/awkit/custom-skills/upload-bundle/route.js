@@ -2,6 +2,7 @@ import AdmZip from "adm-zip";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 import { NextResponse } from "next/server";
 import {
   bundleTempDirectory,
@@ -9,56 +10,44 @@ import {
   parseSkillMarkdown,
   sanitizeSkillId,
   skillExists,
-  zipContainsTraversal,
 } from "@/lib/customSkills";
 
-function findBundleSkills(zip) {
+function findSkillsInDirectory(dir, baseDir = dir) {
   const skills = [];
+  if (!fs.existsSync(dir)) return skills;
 
-  for (const entry of zip.getEntries()) {
-    if (entry.isDirectory) {
-      continue;
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      skills.push(...findSkillsInDirectory(fullPath, baseDir));
+    } else if (item.name === "SKILL.md") {
+      try {
+        const relativeDir = path.relative(baseDir, dir);
+        const folderName = path.basename(dir);
+        const skillId = sanitizeSkillId(folderName);
+
+        if (skillId && skillId === folderName) {
+          const content = fs.readFileSync(fullPath, "utf8");
+          const metadata = parseSkillMarkdown(content, capitalizeFolderName(skillId));
+          skills.push({
+            id: skillId,
+            name: metadata.name,
+            description: metadata.description,
+            exists: skillExists(skillId),
+            entryPrefix: relativeDir ? relativeDir.replace(/\\/g, "/") + "/" : "",
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse skill metadata in directory:", e);
+      }
     }
-
-    const entryName = entry.entryName.replace(/\\/g, "/");
-    const segments = entryName.split("/").filter(Boolean);
-
-    if (segments[segments.length - 1] !== "SKILL.md") {
-      continue;
-    }
-
-    const folderSegments = segments.slice(0, -1);
-
-    if (folderSegments.length === 0) {
-      continue;
-    }
-
-    const folderName = folderSegments[folderSegments.length - 1];
-    const skillId = sanitizeSkillId(folderName);
-
-    if (!skillId || skillId !== folderName) {
-      continue;
-    }
-
-    const metadata = parseSkillMarkdown(
-      entry.getData().toString("utf8"),
-      capitalizeFolderName(skillId)
-    );
-
-    skills.push({
-      id: skillId,
-      name: metadata.name,
-      description: metadata.description,
-      exists: skillExists(skillId),
-      entryPrefix: folderSegments.join("/") + "/",
-    });
   }
 
   const uniqueSkills = new Map();
-
   for (const skill of skills) {
     const existing = uniqueSkills.get(skill.id);
-
     if (!existing || skill.entryPrefix.length < existing.entryPrefix.length) {
       uniqueSkills.set(skill.id, skill);
     }
@@ -70,6 +59,11 @@ function findBundleSkills(zip) {
 }
 
 export async function POST(request) {
+  const tempFileId = crypto.randomUUID();
+  fs.mkdirSync(bundleTempDirectory, { recursive: true });
+  const tempFilePath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}.zip`);
+  const extractedDirPath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}`);
+
   try {
     const formData = await request.formData();
     const file = formData.get("file");
@@ -79,40 +73,30 @@ export async function POST(request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const tempFileId = crypto.randomUUID();
-    
-    // Save to temp folder first so we can analyze the uploaded payload if parsing fails
-    fs.mkdirSync(bundleTempDirectory, { recursive: true });
-    const tempFilePath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}.zip`);
     fs.writeFileSync(tempFilePath, buffer);
 
-    let zip;
-    let skills = [];
-
+    // Try extracting using system unzip first (highly optimized, supports ZIP64 and all metadata signatures)
     try {
-      zip = new AdmZip(tempFilePath); // Use file path instead of buffer, sometimes adm-zip handles file paths better
-      
-      // Force lazy parse
-      zip.getEntries();
-
-      if (zipContainsTraversal(zip)) {
-        // Clean up on error
-        try { fs.unlinkSync(tempFilePath); } catch {}
-        return NextResponse.json({ error: "Invalid ZIP entry path" }, { status: 400 });
+      fs.mkdirSync(extractedDirPath, { recursive: true });
+      execSync(`unzip -q -o "${tempFilePath}" -d "${extractedDirPath}"`);
+    } catch (cliError) {
+      console.warn("System unzip CLI failed, attempting adm-zip fallback:", cliError);
+      try {
+        const zip = new AdmZip(tempFilePath);
+        zip.extractAllTo(extractedDirPath, true);
+      } catch (zipError) {
+        throw new Error(`Failed to extract zip file: ${zipError.message}`);
       }
-
-      skills = findBundleSkills(zip);
-    } catch (zipError) {
-      console.error("Failed to parse ZIP archive with adm-zip:", zipError);
-      return NextResponse.json({
-        error: `Invalid ZIP file structure: ${zipError.message}`,
-        details: "The uploaded file may be corrupted, uses an unsupported format (like ZIP64), or is too large for the parser.",
-        tempFileId // Keep ID so we can inspect the file on disk
-      }, { status: 400 });
     }
 
+    const skills = findSkillsInDirectory(extractedDirPath);
+
     if (skills.length === 0) {
-      try { fs.unlinkSync(tempFilePath); } catch {}
+      // Cleanup
+      try {
+        fs.rmSync(tempFilePath, { force: true });
+        fs.rmSync(extractedDirPath, { recursive: true, force: true });
+      } catch {}
       return NextResponse.json(
         { error: "No skills found in bundle (missing SKILL.md files)" },
         { status: 400 }
@@ -121,17 +105,20 @@ export async function POST(request) {
 
     return NextResponse.json({
       tempFileId,
-      skills: skills.map(({ id, name, description, exists }) => ({
-        id,
-        name,
-        description,
-        exists,
-      })),
+      skills,
     });
   } catch (error) {
     console.error("Failed to upload skill bundle:", error);
+    // Cleanup on error
+    try {
+      fs.rmSync(tempFilePath, { force: true });
+      if (fs.existsSync(extractedDirPath)) {
+        fs.rmSync(extractedDirPath, { recursive: true, force: true });
+      }
+    } catch {}
+
     return NextResponse.json(
-      { error: `Failed to upload skill bundle: ${error.message}`, stack: error.stack },
+      { error: `Failed to upload skill bundle: ${error.message}` },
       { status: 500 }
     );
   }

@@ -38,7 +38,29 @@ function findSkillEntryPrefix(zip, skillId) {
   return bestPrefix;
 }
 
+function findSkillEntryPrefixFs(extractedDirPath, skillId) {
+  const search = (dir) => {
+    if (!fs.existsSync(dir)) return null;
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      const fullPath = path.join(dir, item.name);
+      if (item.isDirectory()) {
+        if (item.name === skillId && fs.existsSync(path.join(fullPath, "SKILL.md"))) {
+          return path.relative(extractedDirPath, fullPath) + "/";
+        }
+        const res = search(fullPath);
+        if (res) return res;
+      }
+    }
+    return null;
+  };
+  return search(extractedDirPath);
+}
+
 export async function POST(request) {
+  let tempFilePath = "";
+  let extractedDirPath = "";
+
   try {
     const body = await request.json();
     const tempFileId = String(body.tempFileId || "");
@@ -52,20 +74,29 @@ export async function POST(request) {
       return NextResponse.json({ error: "No skills selected" }, { status: 400 });
     }
 
-    const tempFilePath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}.zip`);
+    tempFilePath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}.zip`);
+    extractedDirPath = path.join(bundleTempDirectory, `temp-bundle-${tempFileId}`);
 
-    if (!fs.existsSync(tempFilePath)) {
+    const useUnzippedFolder = fs.existsSync(extractedDirPath);
+
+    if (!useUnzippedFolder && !fs.existsSync(tempFilePath)) {
       return NextResponse.json(
         { error: "Bundle expired or not found. Please upload again." },
         { status: 404 }
       );
     }
 
-    const zip = new AdmZip(tempFilePath);
-
-    if (zipContainsTraversal(zip)) {
-      fs.rmSync(tempFilePath, { force: true });
-      return NextResponse.json({ error: "Invalid ZIP entry path" }, { status: 400 });
+    let zip = null;
+    if (!useUnzippedFolder) {
+      try {
+        zip = new AdmZip(tempFilePath);
+        if (zipContainsTraversal(zip)) {
+          fs.rmSync(tempFilePath, { force: true });
+          return NextResponse.json({ error: "Invalid ZIP entry path" }, { status: 400 });
+        }
+      } catch (err) {
+        return NextResponse.json({ error: `Failed to parse ZIP archive: ${err.message}` }, { status: 400 });
+      }
     }
 
     const extracted = [];
@@ -79,52 +110,88 @@ export async function POST(request) {
         continue;
       }
 
-      const entryPrefix = findSkillEntryPrefix(zip, skillId);
+      if (useUnzippedFolder) {
+        const entryPrefix = findSkillEntryPrefixFs(extractedDirPath, skillId);
 
-      if (!entryPrefix) {
-        skipped.push({ id: skillId, reason: "Skill not found in bundle" });
-        continue;
+        if (!entryPrefix) {
+          skipped.push({ id: skillId, reason: "Skill not found in bundle" });
+          continue;
+        }
+
+        const sourceSkillDir = path.join(extractedDirPath, entryPrefix);
+        const skillDirectory = path.join(customSkillsDirectory, skillId);
+
+        fs.rmSync(skillDirectory, { recursive: true, force: true });
+        fs.mkdirSync(skillDirectory, { recursive: true });
+        fs.cpSync(sourceSkillDir, skillDirectory, { recursive: true });
+
+        extracted.push({
+          id: skillId,
+          ...readSkillMetadata(skillDirectory, skillId),
+          isBuiltIn: false,
+          icon: "extension",
+        });
+      } else {
+        const entryPrefix = findSkillEntryPrefix(zip, skillId);
+
+        if (!entryPrefix) {
+          skipped.push({ id: skillId, reason: "Skill not found in bundle" });
+          continue;
+        }
+
+        const skillDirectory = path.join(customSkillsDirectory, skillId);
+        fs.rmSync(skillDirectory, { recursive: true, force: true });
+        fs.mkdirSync(skillDirectory, { recursive: true });
+
+        for (const entry of zip.getEntries()) {
+          const entryName = entry.entryName.replace(/\\/g, "/");
+
+          if (entry.isDirectory || !entryName.startsWith(entryPrefix)) {
+            continue;
+          }
+
+          const relativePath = entryName.slice(entryPrefix.length);
+
+          if (!relativePath) {
+            continue;
+          }
+
+          const targetPath = path.resolve(skillDirectory, relativePath);
+
+          if (!targetPath.startsWith(path.resolve(skillDirectory) + path.sep)) {
+            continue;
+          }
+
+          fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+          fs.writeFileSync(targetPath, entry.getData());
+        }
+
+        extracted.push({
+          id: skillId,
+          ...readSkillMetadata(skillDirectory, skillId),
+          isBuiltIn: false,
+          icon: "extension",
+        });
       }
-
-      const skillDirectory = path.join(customSkillsDirectory, skillId);
-      fs.rmSync(skillDirectory, { recursive: true, force: true });
-      fs.mkdirSync(skillDirectory, { recursive: true });
-
-      for (const entry of zip.getEntries()) {
-        const entryName = entry.entryName.replace(/\\/g, "/");
-
-        if (entry.isDirectory || !entryName.startsWith(entryPrefix)) {
-          continue;
-        }
-
-        const relativePath = entryName.slice(entryPrefix.length);
-
-        if (!relativePath) {
-          continue;
-        }
-
-        const targetPath = path.resolve(skillDirectory, relativePath);
-
-        if (!targetPath.startsWith(path.resolve(skillDirectory) + path.sep)) {
-          continue;
-        }
-
-        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-        fs.writeFileSync(targetPath, entry.getData());
-      }
-
-      extracted.push({
-        id: skillId,
-        ...readSkillMetadata(skillDirectory, skillId),
-        isBuiltIn: false,
-        icon: "extension",
-      });
     }
 
-    fs.rmSync(tempFilePath, { force: true });
+    // Clean up both temporary files and unzipped folders
+    try {
+      if (fs.existsSync(tempFilePath)) fs.rmSync(tempFilePath, { force: true });
+      if (fs.existsSync(extractedDirPath)) fs.rmSync(extractedDirPath, { recursive: true, force: true });
+    } catch (cleanupErr) {
+      console.warn("Failed to clean up temp files:", cleanupErr);
+    }
+
     return NextResponse.json({ success: true, extracted, skipped });
   } catch (error) {
     console.error("Failed to extract skill bundle:", error);
+    // Cleanup on error
+    try {
+      if (tempFilePath && fs.existsSync(tempFilePath)) fs.rmSync(tempFilePath, { force: true });
+      if (extractedDirPath && fs.existsSync(extractedDirPath)) fs.rmSync(extractedDirPath, { recursive: true, force: true });
+    } catch {}
+
     return NextResponse.json(
       { error: "Failed to extract skill bundle" },
       { status: 500 }

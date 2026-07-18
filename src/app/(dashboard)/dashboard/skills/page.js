@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Card } from "@/shared/components";
+import { Badge, Button, Card, Pagination } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { SKILLS_REPO_URL } from "@/shared/constants/skills";
 
@@ -97,6 +97,16 @@ export default function SkillsPage() {
   const [deletingSkillId, setDeletingSkillId] = useState(null);
   const [customSkillError, setCustomSkillError] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
+
+  // Auto-adjust page if current page becomes empty due to item deletion or size changes
+  useEffect(() => {
+    const totalPages = Math.ceil(skills.length / pageSize);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [skills.length, pageSize, currentPage]);
 
   const toggleSkill = (skillId) => {
     setSelectedSkills((current) =>
@@ -107,6 +117,10 @@ export default function SkillsPage() {
   };
 
   const customBundleUrl = `/api/v1/awkit/download?package=custom&skills=${encodeURIComponent(selectedSkills.join(","))}`;
+
+  const indexOfLastItem = currentPage * pageSize;
+  const indexOfFirstItem = indexOfLastItem - pageSize;
+  const currentSkills = skills.slice(indexOfFirstItem, indexOfLastItem);
 
   const fetchSkills = useCallback(async () => {
     setLoadingSkills(true);
@@ -410,7 +424,7 @@ export default function SkillsPage() {
               <p className="col-span-full py-8 text-center text-sm text-text-muted">
                 No skills are available yet.
               </p>
-            ) : skills.map((skill) => {
+            ) : currentSkills.map((skill) => {
               const isSelected = selectedSkills.includes(skill.id);
 
               return (
@@ -456,6 +470,17 @@ export default function SkillsPage() {
               );
             })}
           </div>
+
+          {skills.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={skills.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              className="mt-4 border-t border-border/50 pt-4"
+            />
+          )}
         </Card>
       </section>
 

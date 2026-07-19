@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
+import crypto from "crypto";
 import { DATA_DIR } from "@/lib/dataDir";
 
 export const BUILT_IN_ICONS = {
@@ -76,10 +77,10 @@ export function parseSKILLmd(filePath) {
 }
 
 export function readSkillMetadata(skillDirectory, skillId) {
-  const skillFilePath = path.join(skillDirectory, "SKILL.md");
+  const mdPath = path.join(skillDirectory, "SKILL.md");
 
-  if (fs.existsSync(skillFilePath)) {
-    return parseSKILLmd(skillFilePath);
+  if (fs.existsSync(mdPath)) {
+    return parseSKILLmd(mdPath);
   }
 
   return {
@@ -89,7 +90,7 @@ export function readSkillMetadata(skillDirectory, skillId) {
 }
 
 export function isBuiltInSkill(skillId) {
-  return fs.existsSync(path.join(builtInSkillsDirectory, skillId, "SKILL.md"));
+  return fs.existsSync(path.join(builtInSkillsDirectory, skillId));
 }
 
 export function isCustomSkill(skillId) {
@@ -97,86 +98,68 @@ export function isCustomSkill(skillId) {
 }
 
 export function skillExists(skillId) {
-  return isCustomSkill(skillId) || isBuiltInSkill(skillId);
+  return isBuiltInSkill(skillId) || isCustomSkill(skillId);
 }
 
 export function resolveSkillDirectory(skillId) {
-  const customDirectory = path.join(customSkillsDirectory, skillId);
-
-  if (fs.existsSync(customDirectory)) {
-    return { directory: customDirectory, isCustom: true };
-  }
-
   const builtInDirectory = path.join(builtInSkillsDirectory, skillId);
 
   if (fs.existsSync(builtInDirectory)) {
-    return { directory: builtInDirectory, isCustom: false };
+    return { directory: builtInDirectory, isBuiltIn: true };
+  }
+
+  const customDirectory = path.join(customSkillsDirectory, skillId);
+
+  if (fs.existsSync(customDirectory)) {
+    return { directory: customDirectory, isBuiltIn: false };
   }
 
   return null;
 }
 
 export function sanitizeRelativePath(value) {
-  const normalized = String(value || "").replace(/\\/g, "/");
-
-  if (
-    !normalized ||
-    normalized.startsWith("/") ||
-    /^[a-zA-Z]:\//.test(normalized) ||
-    normalized.includes("\0")
-  ) {
-    return null;
-  }
-
-  const segments = normalized.split("/").filter((segment) => segment.length > 0);
-
-  if (segments.length === 0 || segments.some((segment) => segment === "." || segment === "..")) {
-    return null;
-  }
-
-  return segments.join("/");
+  return String(value || "")
+    .replace(/[/\\]+/g, "/")
+    .replace(/^\/+|\/+$/g, "");
 }
 
 export function resolveWithinDirectory(baseDirectory, relativePath) {
-  const sanitized = sanitizeRelativePath(relativePath);
+  const sanitizedPath = sanitizeRelativePath(relativePath);
 
-  if (!sanitized) {
+  if (!sanitizedPath) {
     return null;
   }
 
-  const absolutePath = path.resolve(baseDirectory, sanitized);
-  const boundary = path.resolve(baseDirectory) + path.sep;
+  const absolutePath = path.resolve(baseDirectory, sanitizedPath);
 
-  if (!absolutePath.startsWith(boundary)) {
+  if (!absolutePath.startsWith(path.resolve(baseDirectory))) {
     return null;
   }
 
-  return { absolutePath, relativePath: sanitized };
+  return absolutePath;
 }
 
 export function zipContainsTraversal(zip) {
   return zip.getEntries().some((entry) => {
     const entryName = entry.entryName.replace(/\\/g, "/");
-    return (
-      entryName.startsWith("/") ||
-      /^[a-zA-Z]:\//.test(entryName) ||
-      entryName.split("/").includes("..")
-    );
+    return entryName.includes("../") || entryName.includes("/..");
   });
 }
 
 export function listSkillFiles(skillDirectory) {
   const files = [];
 
-  const walk = (directory, prefix) => {
+  const walk = (directory, relativePrefix) => {
     const entries = fs.readdirSync(directory, { withFileTypes: true });
 
     for (const entry of entries) {
-      const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const relativePath = relativePrefix
+        ? `${relativePrefix}/${entry.name}`
+        : entry.name;
 
       if (entry.isDirectory()) {
         walk(path.join(directory, entry.name), relativePath);
-      } else if (entry.isFile()) {
+      } else {
         files.push(relativePath);
       }
     }
@@ -263,6 +246,8 @@ export function listWorkflowsFromZip() {
         id,
         name,
         description,
+        hash: crypto.createHash("md5").update(contents).digest("hex"),
+        updatedAt: entry.header.time ? entry.header.time.toISOString() : new Date().toISOString(),
       });
     }
 
@@ -270,5 +255,28 @@ export function listWorkflowsFromZip() {
   } catch (error) {
     console.error("Failed to list workflows from zip:", error);
     return [];
+  }
+}
+
+export function getSkillFolderHash(skillId) {
+  const res = resolveSkillDirectory(skillId);
+  if (!res || !fs.existsSync(res.directory)) return "";
+
+  try {
+    const files = listSkillFiles(res.directory);
+    const hash = crypto.createHash("md5");
+
+    for (const file of files) {
+      const fullPath = path.join(res.directory, file);
+      if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+        const content = fs.readFileSync(fullPath);
+        hash.update(file);
+        hash.update(content);
+      }
+    }
+    return hash.digest("hex");
+  } catch (e) {
+    console.error(`Failed to compute hash for skill ${skillId}:`, e);
+    return "";
   }
 }

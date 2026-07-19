@@ -34,13 +34,16 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const pkg = searchParams.get("package") || searchParams.get("skill");
   const requestedSkills = searchParams.get("skills");
+  const requestedWorkflows = searchParams.get("workflows");
   const groupPackages = ["core", "skills", "workflows"];
   const isCustomBundle = pkg === "custom" || requestedSkills !== null;
+  const isCustomWorkflowsBundle = pkg === "custom-workflows" || requestedWorkflows !== null;
   const projectRoot = process.cwd();
   const sanitizedPkg = sanitizeSkillId(pkg);
 
   if (
     !isCustomBundle &&
+    !isCustomWorkflowsBundle &&
     !groupPackages.includes(pkg) &&
     !skillDirExists(projectRoot, sanitizedPkg)
   ) {
@@ -92,6 +95,57 @@ export async function GET(request) {
 
       zipBuffer = zip.toBuffer();
       filename = "awkit-custom-skills.zip";
+    } else if (isCustomWorkflowsBundle) {
+      const systemWorkflowsZipPath = path.join(DATA_DIR, "storage", "awkit", "workflows.zip");
+      if (!fs.existsSync(systemWorkflowsZipPath)) {
+        return NextResponse.json(
+          { error: "System workflows bundle not found on the server" },
+          { status: 404 }
+        );
+      }
+
+      const targetWorkflowIds = (requestedWorkflows || "")
+        .split(",")
+        .map((w) => w.trim())
+        .filter(Boolean);
+
+      if (targetWorkflowIds.length === 0) {
+        return NextResponse.json(
+          { error: "No workflows specified" },
+          { status: 400 }
+        );
+      }
+
+      const zip = new AdmZip();
+      const sourceZip = new AdmZip(systemWorkflowsZipPath);
+      const sourceEntries = sourceZip.getEntries();
+      let addedCount = 0;
+
+      for (const entry of sourceEntries) {
+        if (entry.isDirectory) continue;
+        if (!entry.entryName.startsWith("workflows/")) continue;
+        if (!entry.entryName.endsWith(".md")) continue;
+
+        let id = entry.entryName.slice("workflows/".length);
+        if (id.endsWith(".md")) {
+          id = id.slice(0, -3);
+        }
+
+        if (targetWorkflowIds.includes(id)) {
+          zip.addFile(entry.entryName, entry.getData());
+          addedCount++;
+        }
+      }
+
+      if (addedCount === 0) {
+        return NextResponse.json(
+          { error: "No matching workflows found on the server" },
+          { status: 404 }
+        );
+      }
+
+      zipBuffer = zip.toBuffer();
+      filename = "awkit-custom-workflows.zip";
     } else if (pkg === "skills") {
       // If a package is bound to this key, package only those skills
       if (skillPackage) {

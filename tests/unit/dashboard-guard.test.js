@@ -23,6 +23,10 @@ vi.mock("next/server", () => ({
 vi.mock("@/lib/localDb", () => ({
   getSettings: mocks.getSettings,
   validateApiKey: mocks.validateApiKey,
+  validateApiKeyDetails: async (key, resource) => {
+    const valid = await mocks.validateApiKey(key);
+    return { valid };
+  },
 }));
 
 vi.mock("@/shared/utils/machineId", () => ({

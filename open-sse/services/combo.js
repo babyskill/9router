@@ -75,8 +75,10 @@ export function reorderByCapabilities(models, required) {
   };
 
   // Stable sort by tier (Array.prototype.sort is stable in modern engines).
-  return models
-    .map((m, i) => ({ m, i, t: tierOf(m) }))
+  const mapped = models.map((m, i) => ({ m, i, t: tierOf(m) }));
+  if (mapped.every(x => x.t === mapped[0].t)) return models;
+
+  return mapped
     .sort((a, b) => a.t - b.t || a.i - b.i)
     .map((x) => x.m);
 }
@@ -127,7 +129,14 @@ export function detectRequiredCapabilities(body) {
   const contents = body.contents || body.request?.contents;                      // gemini / antigravity
   for (const c of trailingUserItems(contents)) scanContent(c.parts);
 
-  // search: temporarily disabled in auto-switch (feature not wired yet).
+  // search
+  if (body.tools && Array.isArray(body.tools)) {
+    for (const t of body.tools) {
+      if (t.type === "web_search" || t.type === "google_search") {
+        required.add("search");
+      }
+    }
+  }
 
   return required;
 }

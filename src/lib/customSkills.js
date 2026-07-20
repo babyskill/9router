@@ -138,7 +138,7 @@ export function resolveWithinDirectory(baseDirectory, relativePath) {
     return null;
   }
 
-  return absolutePath;
+  return { absolutePath, relativePath: sanitizedPath };
 }
 
 export function zipContainsTraversal(zip) {

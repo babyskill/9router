@@ -28,7 +28,9 @@ export function capitalizeFolderName(folderName) {
 }
 
 export function sanitizeSkillId(value) {
-  return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "");
+  let cleaned = String(value || "").replace(/[^a-zA-Z0-9_\-\/]/g, "");
+  cleaned = cleaned.replace(/\.\.+/g, "");
+  return cleaned.replace(/^\/+|\/+$/g, "");
 }
 
 function parseFrontmatterValue(frontmatter, key) {

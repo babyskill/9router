@@ -10,6 +10,8 @@ import {
   getSkillFolderHash,
 } from "@/lib/customSkills";
 
+export const dynamic = "force-dynamic";
+
 const extractApiKey = (req) => {
   const auth = req.headers.get("Authorization");
   if (auth?.startsWith("Bearer ")) return auth.slice(7);
@@ -37,6 +39,11 @@ export async function GET(request) {
   if (!apiKey) {
     return NextResponse.json({ error: "API Key is required" }, { status: 401 });
   }
+
+  console.log("=== MANIFEST API DEBUG ===");
+  console.log("builtInSkillsDirectory:", builtInSkillsDirectory);
+  console.log("customSkillsDirectory:", customSkillsDirectory);
+  console.log("Test resolution quality/plan-eng-review:", resolveSkillDirectory("quality/plan-eng-review"));
 
   try {
     const keyDetails = await getApiKeyByKey(apiKey);
@@ -77,24 +84,31 @@ export async function GET(request) {
       selectedWorkflows = allSystemWorkflows.map((w) => w.id);
     }
 
-    // Map skills to manifest metadata
-    const skillsManifest = selectedSkills.map((skillId) => {
-      return {
-        id: skillId,
-        hash: getSkillFolderHash(skillId),
-        updatedAt: getSkillFolderUpdatedAt(skillId),
-      };
-    });
+    // Map skills to manifest metadata, keeping only those that actually exist on the server
+    const skillsManifest = selectedSkills
+      .filter((skillId) => {
+        const res = resolveSkillDirectory(skillId);
+        return res && fs.existsSync(res.directory);
+      })
+      .map((skillId) => {
+        return {
+          id: skillId,
+          hash: getSkillFolderHash(skillId),
+          updatedAt: getSkillFolderUpdatedAt(skillId),
+        };
+      });
 
-    // Map workflows to manifest metadata (matching with ZIP catalog hashes)
-    const workflowsManifest = selectedWorkflows.map((wfId) => {
-      const match = allSystemWorkflows.find((w) => w.id === wfId);
-      return {
-        id: wfId,
-        hash: match ? match.hash : "",
-        updatedAt: match ? match.updatedAt : new Date().toISOString(),
-      };
-    });
+    // Map workflows to manifest metadata, keeping only those that actually exist in the workflows zip
+    const workflowsManifest = selectedWorkflows
+      .filter((wfId) => allSystemWorkflows.some((w) => w.id === wfId))
+      .map((wfId) => {
+        const match = allSystemWorkflows.find((w) => w.id === wfId);
+        return {
+          id: wfId,
+          hash: match ? match.hash : "",
+          updatedAt: match ? match.updatedAt : new Date().toISOString(),
+        };
+      });
 
     return NextResponse.json({
       packageName: skillPackage ? skillPackage.name : "All Skills & Workflows (Default)",

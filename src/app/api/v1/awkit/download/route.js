@@ -13,6 +13,8 @@ import {
 const sanitizeSkillId = (skillId) =>
   (skillId || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
 
+export const dynamic = "force-dynamic";
+
 const skillDirExists = (projectRoot, skillId) => {
   if (!skillId) return false;
   const skillDir = resolveSkillDirectory(skillId)?.directory;
